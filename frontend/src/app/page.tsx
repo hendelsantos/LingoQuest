@@ -58,9 +58,9 @@ export default function Home() {
             com um professor que acompanha de verdade a sua evolução.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#planos">
-              Quero começar
-            </a>
+            <Link className="button button-primary" href="/app">
+              Testar a plataforma
+            </Link>
             <a className="text-link" href="#metodo">
               Conhecer o método <span aria-hidden="true">↓</span>
             </a>
@@ -125,9 +125,9 @@ export default function Home() {
             ou cobrança antes da hora.
           </p>
         </div>
-        <span className="button button-light" aria-label="Inscrições ainda não abertas">
-          Inscrições em breve
-        </span>
+        <Link className="button button-light" href="/app">
+          Entrar no ambiente demo
+        </Link>
       </section>
 
       <footer>

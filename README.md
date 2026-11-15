@@ -5,18 +5,24 @@ acadêmica em uma única plataforma. A [especificação](SPEC.md) é a fonte ini
 
 ## Estado atual
 
-Fase 0 — Fundação:
+Fundação publicada e primeiro fluxo educacional demonstrável:
 
 - monorepo com Django REST Framework e Next.js;
 - PostgreSQL como único banco suportado;
 - usuário customizado criado antes da primeira migration;
-- health check, OpenAPI em desenvolvimento e landing responsiva;
+- health check, OpenAPI em desenvolvimento, landing e ambiente do aluno responsivos;
+- curso A1 Foundations com duas unidades, oito missões e 24 questões reais;
+- teoria, exemplos, áudio de referência, quiz corrigido no servidor e feedback pedagógico;
+- painel e trilha demonstrativos com progresso salvo no navegador;
 - configurações separadas para desenvolvimento, testes e produção;
 - testes, lint, typecheck, build e CI;
-- configuração de deploy preparada para dois serviços isolados no Railway, sem deploy realizado.
+- frontend, backend e PostgreSQL publicados no Railway com deploy automático pela `main`.
 
-Autenticação, curso, pagamentos e vídeo **ainda não estão implementados**. A interface não
-simula sucesso desses recursos.
+Autenticação, matrícula persistida por aluno, pagamentos e vídeo **ainda não estão implementados**.
+O modo público é identificado como demonstração e não simula esses recursos.
+
+Produção: <https://frontend-production-a0b865d3.up.railway.app/><br>
+Ambiente de aprendizado: <https://frontend-production-a0b865d3.up.railway.app/app>
 
 ## Pré-requisitos
 
@@ -61,6 +67,13 @@ OpenAPI (desenvolvimento): <http://127.0.0.1:8000/api/docs/>
 
 O navegador acessa a API por `/api/*` na origem do Next.js. O rewrite usa
 `NEXT_INTERNAL_API_BASE_URL` apenas no servidor e preserva cookies/CSRF na mesma origem.
+
+Para popular ou atualizar o conteúdo A1 localmente:
+
+```bash
+cd backend
+uv run python manage.py seed_demo
+```
 
 ## Qualidade
 

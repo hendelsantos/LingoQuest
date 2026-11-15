@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.core.views import health
@@ -24,6 +24,7 @@ from apps.core.views import health
 urlpatterns = [
     path("health/", health, name="health"),
     path("admin/", admin.site.urls),
+    path("api/v1/demo/", include("apps.learning.urls")),
 ]
 
 if settings.DEBUG:
