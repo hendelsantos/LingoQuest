@@ -68,7 +68,7 @@ export default function Home() {
           <div className="trust-row" aria-label="Características do programa">
             <span>✓ Aulas ao vivo</span>
             <span>✓ Progresso real</span>
-            <span>✓ Sem infantilização</span>
+            <span>✓ Conteúdo prático</span>
           </div>
         </div>
 
@@ -131,13 +131,13 @@ export default function Home() {
       </section>
 
       <footer>
-        <div className="brand brand-footer">
+        <Link className="brand brand-footer" href="/" aria-label="Voltar para o início">
           <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} />
           <span>
             <strong>LingoQuest</strong>
             <small>{site.tagline}</small>
           </span>
-        </div>
+        </Link>
         <p>© 2026 MH Software. Produto em desenvolvimento.</p>
       </footer>
     </main>

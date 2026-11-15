@@ -8,7 +8,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="student-shell">
       <aside className="student-sidebar">
-        <Link className="student-brand" href="/app" aria-label="LingoQuest — ambiente do aluno">
+        <Link className="student-brand" href="/" aria-label="Voltar para a página inicial da LingoQuest">
           <Image src="/brand/logo-mark.svg" alt="" width={42} height={42} priority />
           <span>
             <strong>LingoQuest</strong>
@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="student-workspace">
         <header className="student-topbar">
-          <Link className="mobile-menu-button" href="/app" aria-label="Ir para a visão geral">LQ</Link>
+          <Link className="mobile-menu-button" href="/" aria-label="Voltar para a página inicial">LQ</Link>
           <div>
             <span>LingoQuest</span>
             <strong>Ambiente de aprendizado</strong>
