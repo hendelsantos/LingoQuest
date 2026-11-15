@@ -1,0 +1,1 @@
+Especificação/LingoQuest_MVP_Especificacao.md

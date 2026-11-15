@@ -1,0 +1,38 @@
+[project]
+name = "lingoquest-backend"
+version = "0.1.0"
+description = "API do LingoQuest English Academy"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "django>=5.2.8,<5.3",
+  "django-environ>=0.12,<0.13",
+  "djangorestframework>=3.16,<3.17",
+  "drf-spectacular>=0.29,<0.30",
+  "gunicorn>=23,<24",
+  "psycopg[binary]>=3.2,<3.4",
+  "whitenoise>=6.9,<7",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4,<9",
+  "pytest-django>=4.11,<5",
+  "ruff>=0.14,<0.16",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+addopts = "--strict-markers --strict-config"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+
