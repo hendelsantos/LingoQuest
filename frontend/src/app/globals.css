@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./live-classroom.css";
 
 :root {
   --brand-900: #123638;
@@ -1035,7 +1036,9 @@ footer {
 }
 
 .live-card button,
+.live-card a,
 .mini-card button {
+  display: inline-flex;
   margin-top: 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1044,6 +1047,10 @@ footer {
   color: var(--muted);
   font-size: 10px;
   font-weight: 750;
+}
+
+.live-card a {
+  color: var(--brand-900);
 }
 
 .mini-card {

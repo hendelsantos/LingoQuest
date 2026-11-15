@@ -14,15 +14,18 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - curso A1 Foundations com duas unidades, oito missões e 24 questões reais;
 - teoria, exemplos, áudio de referência, quiz corrigido no servidor e feedback pedagógico;
 - painel e trilha demonstrativos com progresso salvo no navegador;
+- laboratório de aula ao vivo com câmera local real, controles de mídia e exercício interativo;
 - configurações separadas para desenvolvimento, testes e produção;
 - testes, lint, typecheck, build e CI;
 - frontend, backend e PostgreSQL publicados no Railway com deploy automático pela `main`.
 
-Autenticação, matrícula persistida por aluno, pagamentos e vídeo **ainda não estão implementados**.
-O modo público é identificado como demonstração e não simula esses recursos.
+Autenticação, matrícula persistida por aluno, pagamentos e videoconferência entre duas contas
+**ainda não estão implementados**. O laboratório usa somente os dispositivos locais e informa
+quando não existe um professor conectado; o modo público não simula esses recursos.
 
 Produção: <https://frontend-production-a0b865d3.up.railway.app/><br>
 Ambiente de aprendizado: <https://frontend-production-a0b865d3.up.railway.app/app>
+Laboratório da sala: <https://frontend-production-a0b865d3.up.railway.app/app/live>
 
 ## Pré-requisitos
 
@@ -96,6 +99,7 @@ Especificação/ documento original fornecido
 SPEC.md        atalho versionado para a especificação original
 ```
 
-Leia [análise de produto](docs/product-analysis.md), [arquitetura](docs/architecture.md) e
+Leia [análise de produto](docs/product-analysis.md), [arquitetura](docs/architecture.md),
+[plano de evolução e implantação](docs/product-evolution-plan.md) e
 [roadmap de entrega](docs/roadmap.md) antes de ampliar o escopo.
 

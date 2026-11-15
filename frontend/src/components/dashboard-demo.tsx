@@ -80,7 +80,7 @@ export function DashboardDemo() {
         </article>
 
         <aside className="dashboard-aside">
-          <article className="live-card"><span>• Aulas ao vivo</span><h3>Live classroom</h3><p>Pratique conversação com um professor. A agenda será habilitada na próxima etapa.</p><button disabled>Em breve</button></article>
+          <article className="live-card"><span>• Aulas ao vivo</span><h3>Live classroom</h3><p>Teste câmera, microfone e uma atividade dentro da sala demonstrativa.</p><Link href="/app/live">Ver sala de aula →</Link></article>
           <article className="mini-card"><span>✳</span><div><h3>Mini challenge</h3><p>Conclua uma missão e desbloqueie 60 XP.</p></div></article>
           <article className="mini-card"><span>✎</span><div><h3>Seu caderno digital</h3><p>Guarde expressões e revise vocabulário.</p><button disabled>Abrir em breve</button></div></article>
         </aside>

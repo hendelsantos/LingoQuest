@@ -7,7 +7,7 @@ const navigation = [
   { href: "/app", label: "Visão geral", icon: "⌂" },
   { href: "/app/learn", label: "Trilha de inglês", icon: "◇" },
   { href: "/app/notebook", label: "Meu caderno", icon: "▤", disabled: true },
-  { href: "/app/live", label: "Aulas ao vivo", icon: "◉", disabled: true },
+  { href: "/app/live", label: "Aulas ao vivo", icon: "◉" },
   { href: "/app/achievements", label: "Conquistas", icon: "✦", disabled: true },
   { href: "/app/billing", label: "Planos", icon: "▧", disabled: true },
 ];
