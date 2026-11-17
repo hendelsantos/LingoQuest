@@ -4,7 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { emptyProgress, progressStats, readProgress, type DemoProgress } from "@/lib/demo-progress";
+import {
+  PROGRESS_EVENT,
+  emptyProgress,
+  progressForSlugs,
+  progressStats,
+  readProgress,
+  type DemoProgress,
+} from "@/lib/demo-progress";
 import { flattenLessons, getCourseOutline, type CourseOutline } from "@/lib/learning";
 
 export function DashboardDemo() {
@@ -14,23 +21,27 @@ export function DashboardDemo() {
 
   useEffect(() => {
     const controller = new AbortController();
-    getCourseOutline(controller.signal).then(setOutline).catch((reason: unknown) => {
+    getCourseOutline("a1-foundations", controller.signal).then(setOutline).catch((reason: unknown) => {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Erro inesperado.");
     });
     const refreshProgress = () => setProgress(readProgress());
     refreshProgress();
-    window.addEventListener("lingoquest-progress", refreshProgress);
+    window.addEventListener(PROGRESS_EVENT, refreshProgress);
     window.addEventListener("storage", refreshProgress);
     return () => {
       controller.abort();
-      window.removeEventListener("lingoquest-progress", refreshProgress);
+      window.removeEventListener(PROGRESS_EVENT, refreshProgress);
       window.removeEventListener("storage", refreshProgress);
     };
   }, []);
 
   const lessons = useMemo(() => flattenLessons(outline), [outline]);
-  const stats = progressStats(progress, outline?.lessonCount ?? 8);
-  const nextLesson = lessons.find((lesson) => !progress.completed[lesson.slug]) ?? lessons[0];
+  const courseProgress = useMemo(
+    () => progressForSlugs(progress, lessons.map((lesson) => lesson.slug)),
+    [lessons, progress],
+  );
+  const stats = progressStats(courseProgress, outline?.lessonCount ?? 20);
+  const nextLesson = lessons.find((lesson) => !courseProgress.completed[lesson.slug]) ?? lessons[0];
 
   return (
     <>
@@ -48,7 +59,7 @@ export function DashboardDemo() {
 
       <section className="student-stat-grid" aria-label="Seu progresso">
         <article><span className="stat-icon is-warm">⚡</span><div><strong>{stats.xp}</strong><small>Pontos de experiência</small></div></article>
-        <article><span className="stat-icon is-green">◇</span><div><strong>{stats.completedCount}/{outline?.lessonCount ?? 8}</strong><small>Missões concluídas</small></div></article>
+        <article><span className="stat-icon is-green">◇</span><div><strong>{stats.completedCount}/{outline?.lessonCount ?? 20}</strong><small>Missões concluídas</small></div></article>
         <article><span className="stat-icon is-lavender">◎</span><div><strong>{stats.percent}%</strong><small>Progresso A1</small></div></article>
       </section>
 
@@ -63,10 +74,10 @@ export function DashboardDemo() {
         <article className="learning-path-card">
           <div className="course-card-topline"><span>A1 · Foundations</span><strong>{stats.percent}%</strong></div>
           <div className="course-progress"><i style={{ width: `${stats.percent}%` }} /></div>
-          <small>{stats.percent}% concluído · {outline?.lessonCount ?? 8} missões</small>
+          <small>{stats.percent}% concluído · {outline?.lessonCount ?? 20} missões</small>
           <div className="compact-lesson-list">
             {lessons.slice(0, 4).map((lesson, index) => {
-              const done = Boolean(progress.completed[lesson.slug]);
+              const done = Boolean(courseProgress.completed[lesson.slug]);
               return (
                 <div className="compact-lesson" key={lesson.slug}>
                   <span className={done ? "is-done" : ""}>{done ? "✓" : String(index + 1).padStart(2, "0")}</span>

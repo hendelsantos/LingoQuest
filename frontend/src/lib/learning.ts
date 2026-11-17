@@ -1,3 +1,5 @@
+export type QuestionType = "MCQ" | "FILL_IN" | "ORDERING" | "LISTENING";
+
 export type LessonSummary = {
   slug: string;
   title: string;
@@ -24,6 +26,15 @@ export type CourseOutline = {
   units: CourseUnit[];
 };
 
+export type CourseSummary = {
+  slug: string;
+  title: string;
+  description: string;
+  level: string;
+  unitCount: number;
+  lessonCount: number;
+};
+
 export type LessonChoice = {
   id: number;
   text: string;
@@ -32,9 +43,17 @@ export type LessonChoice = {
 
 export type LessonQuestion = {
   id: number;
+  type: QuestionType;
   prompt: string;
   position: number;
-  choices: LessonChoice[];
+  choices?: LessonChoice[];
+  tokens?: string[];
+  audioText?: string;
+};
+
+export type DialogueLine = {
+  speaker: string;
+  line: string;
 };
 
 export type LessonDetail = LessonSummary & {
@@ -42,46 +61,66 @@ export type LessonDetail = LessonSummary & {
   theory: string;
   example: string;
   keyPoints: string[];
+  dialogue?: DialogueLine[];
   passingPercent: number;
   questions: LessonQuestion[];
 };
 
 export type AnswerFeedback = {
   isCorrect: boolean;
-  selectedChoiceId: number;
-  correctChoiceId: number;
   explanation: string;
+  selectedChoiceId?: number;
+  correctChoiceId?: number;
+  correctAnswer?: string;
+};
+
+export type AnswerPayload = {
+  choiceId?: number;
+  answer?: string;
+  order?: string[];
 };
 
 export function flattenLessons(outline: CourseOutline | null): LessonSummary[] {
   return outline?.units.flatMap((unit) => unit.lessons) ?? [];
 }
 
-export async function getCourseOutline(signal?: AbortSignal): Promise<CourseOutline> {
-  const response = await fetch("/api/v1/demo/courses/a1-foundations/outline/", { signal });
+async function fetchJson<T>(url: string, errorMessage: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
   if (!response.ok) {
-    throw new Error("Não foi possível carregar a trilha.");
+    throw new Error(errorMessage);
   }
-  return response.json() as Promise<CourseOutline>;
+  return response.json() as Promise<T>;
+}
+
+export async function getCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
+  return fetchJson("/api/v1/demo/courses/", "Não foi possível carregar os cursos.", { signal });
+}
+
+export async function getCourseOutline(slug: string, signal?: AbortSignal): Promise<CourseOutline> {
+  return fetchJson(
+    `/api/v1/demo/courses/${encodeURIComponent(slug)}/outline/`,
+    "Não foi possível carregar a trilha.",
+    { signal },
+  );
 }
 
 export async function getLesson(slug: string, signal?: AbortSignal): Promise<LessonDetail> {
-  const response = await fetch(`/api/v1/demo/lessons/${encodeURIComponent(slug)}/`, { signal });
-  if (!response.ok) {
-    throw new Error("Não foi possível carregar esta missão.");
-  }
-  return response.json() as Promise<LessonDetail>;
+  return fetchJson(
+    `/api/v1/demo/lessons/${encodeURIComponent(slug)}/`,
+    "Não foi possível carregar esta missão.",
+    { signal },
+  );
 }
 
 export async function checkAnswer(
   slug: string,
   questionId: number,
-  choiceId: number,
+  payload: AnswerPayload,
 ): Promise<AnswerFeedback> {
   const response = await fetch(`/api/v1/demo/lessons/${encodeURIComponent(slug)}/answer/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ questionId, choiceId }),
+    body: JSON.stringify({ questionId, ...payload }),
   });
   if (!response.ok) {
     throw new Error("Não foi possível corrigir sua resposta.");

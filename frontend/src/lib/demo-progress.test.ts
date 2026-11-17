@@ -7,13 +7,13 @@ describe("progressStats", () => {
     const stats = progressStats(
       {
         completed: {
-          hello: { score: 100, completedAt: "2026-01-01" },
-          tobe: { score: 67, completedAt: "2026-01-02" },
+          hello: { score: 100, completedAt: "2026-01-01", xpAwarded: 60 },
+          tobe: { score: 67, completedAt: "2026-01-02", xpAwarded: 75 },
         },
       },
       8,
     );
 
-    expect(stats).toEqual({ completedCount: 2, xp: 120, percent: 25 });
+    expect(stats).toEqual({ completedCount: 2, xp: 135, percent: 25 });
   });
 });

@@ -11,8 +11,8 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - PostgreSQL como único banco suportado;
 - usuário customizado criado antes da primeira migration;
 - health check, OpenAPI em desenvolvimento, landing e ambiente do aluno responsivos;
-- curso A1 Foundations com duas unidades, oito missões e 24 questões reais;
-- teoria, exemplos, áudio de referência, quiz corrigido no servidor e feedback pedagógico;
+- currículo demonstrativo completo de A1 a C2, com 105 missões e 538 questões;
+- teoria, diálogos, áudio de referência, quatro tipos de exercício e correção no servidor;
 - painel e trilha demonstrativos com progresso salvo no navegador;
 - laboratório de aula ao vivo com câmera local real, controles de mídia e exercício interativo;
 - configurações separadas para desenvolvimento, testes e produção;
@@ -71,7 +71,7 @@ OpenAPI (desenvolvimento): <http://127.0.0.1:8000/api/docs/>
 O navegador acessa a API por `/api/*` na origem do Next.js. O rewrite usa
 `NEXT_INTERNAL_API_BASE_URL` apenas no servidor e preserva cookies/CSRF na mesma origem.
 
-Para popular ou atualizar o conteúdo A1 localmente:
+Para popular ou atualizar o currículo completo localmente:
 
 ```bash
 cd backend

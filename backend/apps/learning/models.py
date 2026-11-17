@@ -61,6 +61,7 @@ class Lesson(models.Model):
     theory = models.TextField()
     example = models.TextField()
     key_points = models.JSONField(default=list)
+    dialogue = models.JSONField(default=list, blank=True)
     estimated_minutes = models.PositiveSmallIntegerField(default=8)
     position = models.PositiveSmallIntegerField()
     xp_reward = models.PositiveSmallIntegerField(default=60)
@@ -88,6 +89,9 @@ class Lesson(models.Model):
 class Question(models.Model):
     class Type(models.TextChoices):
         MCQ = "MCQ", "Múltipla escolha"
+        FILL_IN = "FILL_IN", "Completar lacuna"
+        ORDERING = "ORDERING", "Ordenar palavras"
+        LISTENING = "LISTENING", "Ditado"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="questions")
     type = models.CharField(max_length=10, choices=Type.choices, default=Type.MCQ)
@@ -95,6 +99,7 @@ class Question(models.Model):
     position = models.PositiveSmallIntegerField()
     explanation = models.CharField(max_length=300)
     weight = models.PositiveSmallIntegerField(default=1)
+    answer_data = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ("position",)

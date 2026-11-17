@@ -1,17 +1,18 @@
 from django.core.management.base import BaseCommand
 
-from apps.learning.services import seed_a1_foundations
+from apps.learning.services import seed_curriculum
 
 
 class Command(BaseCommand):
-    help = "Cria ou atualiza o currículo demonstrativo A1 Foundations."
+    help = "Sincroniza o currículo completo (A1 a C2) definido em apps.learning.content."
 
     def handle(self, *args, **options):
-        totals = seed_a1_foundations()
+        totals = seed_curriculum()
         self.stdout.write(
             self.style.SUCCESS(
-                "A1 Foundations pronto: "
-                f"{totals['units']} unidades, {totals['lessons']} lições e "
-                f"{totals['questions']} perguntas."
+                "Currículo pronto: "
+                f"{totals['courses']} cursos, {totals['units']} unidades, "
+                f"{totals['lessons']} lições, {totals['questions']} perguntas e "
+                f"{totals['choices']} alternativas."
             )
         )
