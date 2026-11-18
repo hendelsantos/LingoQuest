@@ -62,6 +62,7 @@ def _sync_lesson(unit: Unit, lesson_data: dict, position: int) -> None:
     lesson.example = lesson_data["example"]
     lesson.key_points = lesson_data["key_points"]
     lesson.dialogue = lesson_data.get("dialogue", [])
+    lesson.pedagogy = lesson_data.get("pedagogy", {})
     lesson.estimated_minutes = lesson_data.get("estimated_minutes", 8)
     lesson.position = position
     lesson.xp_reward = lesson_data.get("xp_reward", 60)

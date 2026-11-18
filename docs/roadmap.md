@@ -3,6 +3,14 @@
 Cada fase termina em um incremento demonstrável, testes e documentação. Uma fase não começa com
 pendências críticas de autorização, integridade ou build na anterior.
 
+## Prioridade atual: qualidade pedagógica
+
+Antes de iniciar matrícula e progresso autenticado da Fase 2A, validar o piloto da Missão 2.0 nas
+quatro primeiras aulas A1. O incremento acrescenta objetivo observável, ativação, erros comuns,
+produção oral/escrita, autoavaliação e perguntas de recuperação. O plano e os critérios estão em
+[evolução pedagógica](pedagogical-evolution-plan.md). Depois da validação com alunos e professor, o
+padrão pode ser expandido ao A1 completo sem interromper o roadmap transacional abaixo.
+
 | Fase | Resultado demonstrável | Gate |
 |---|---|---|
 | 0 — Fundação ✓ | API/DB/web executam, landing real, CI e arquitetura registradas | health, lint, testes e build verdes |

@@ -57,12 +57,28 @@ class DialogueLineSerializer(serializers.Serializer):
     line = serializers.CharField()
 
 
+class ProductionTaskSerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=("SPEAKING", "WRITING"))
+    prompt = serializers.CharField()
+    model = serializers.CharField()
+    checklist = serializers.ListField(child=serializers.CharField())
+
+
+class LessonPedagogySerializer(serializers.Serializer):
+    objective = serializers.CharField()
+    activationPrompt = serializers.CharField()
+    commonMistakes = serializers.ListField(child=serializers.CharField())
+    productionTask = ProductionTaskSerializer()
+    reviewPrompts = serializers.ListField(child=serializers.CharField())
+
+
 class LessonDetailSerializer(LessonSummarySerializer):
     unit = serializers.CharField()
     theory = serializers.CharField()
     example = serializers.CharField()
     keyPoints = serializers.ListField(child=serializers.CharField())
     dialogue = DialogueLineSerializer(many=True, required=False)
+    pedagogy = LessonPedagogySerializer(required=False)
     passingPercent = serializers.IntegerField()
     questions = LessonQuestionSerializer(many=True)
 

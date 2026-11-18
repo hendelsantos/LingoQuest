@@ -12,7 +12,8 @@ import {
   type LessonDetail,
 } from "@/lib/learning";
 
-type Stage = "theory" | "quiz" | "result";
+type Stage = "prepare" | "theory" | "quiz" | "production" | "result";
+type Confidence = "practice" | "supported" | "independent";
 
 export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: string; courseSlug?: string; basePath?: string }) {
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
@@ -27,10 +28,15 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
   const [audioMessage, setAudioMessage] = useState("");
+  const [productionDraft, setProductionDraft] = useState("");
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    getLesson(slug, controller.signal).then(setLesson).catch((reason: unknown) => {
+    getLesson(slug, controller.signal).then((loadedLesson) => {
+      setLesson(loadedLesson);
+      setStage(loadedLesson.pedagogy ? "prepare" : "theory");
+    }).catch((reason: unknown) => {
       if (!controller.signal.aborted) {
         setError(reason instanceof Error ? reason.message : "Erro inesperado.");
       }
@@ -48,6 +54,10 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
   );
   const passed = Boolean(lesson && score >= lesson.passingPercent);
   const orderedTokens = currentQuestion?.tokens ?? [];
+  const stages: Stage[] = lesson?.pedagogy
+    ? ["prepare", "theory", "quiz", "production", "result"]
+    : ["theory", "quiz", "result"];
+  const stageIndex = stages.indexOf(stage);
   const pathHref = courseSlug ? `${basePath}/learn?course=${encodeURIComponent(courseSlug)}` : `${basePath}/learn`;
   const canSubmit = Boolean(currentQuestion && (
     (currentQuestion.type === "MCQ" && selectedChoice !== null)
@@ -109,13 +119,8 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
     }
   }
 
-  function nextQuestion() {
+  function finishLesson() {
     if (!lesson) return;
-    if (questionIndex + 1 < lesson.questions.length) {
-      setQuestionIndex((index) => index + 1);
-      resetAnswer();
-      return;
-    }
     if (passed) {
       const isReview = Boolean(readProgress().completed[lesson.slug]);
       const awarded = isReview ? 15 : lesson.xpReward;
@@ -123,6 +128,20 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
       setXpEarned(awarded);
     }
     setStage("result");
+  }
+
+  function nextQuestion() {
+    if (!lesson) return;
+    if (questionIndex + 1 < lesson.questions.length) {
+      setQuestionIndex((index) => index + 1);
+      resetAnswer();
+      return;
+    }
+    if (passed && lesson.pedagogy) {
+      setStage("production");
+      return;
+    }
+    finishLesson();
   }
 
   function restart() {
@@ -142,17 +161,27 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
     <div className="lesson-page">
       <div className="lesson-page-top">
         <Link href={pathHref}>← Voltar para a trilha</Link>
-        <div className="lesson-stepper" aria-label={`Etapa ${stage === "theory" ? 1 : stage === "quiz" ? 2 : 3} de 3`}>
-          <i className="is-active" />
-          <i className={stage !== "theory" ? "is-active" : ""} />
-          <i className={stage === "result" ? "is-active" : ""} />
+        <div className="lesson-stepper" style={{ gridTemplateColumns: `repeat(${stages.length}, 1fr)` }} aria-label={`Etapa ${stageIndex + 1} de ${stages.length}`}>
+          {stages.map((item, index) => <i className={index <= stageIndex ? "is-active" : ""} key={item} />)}
         </div>
         <span>+{lesson.xpReward} XP</span>
       </div>
 
+      {stage === "prepare" && lesson.pedagogy ? (
+        <article className="prepare-card">
+          <span className="student-kicker">Antes de estudar</span>
+          <h1>Ative o que você já sabe.</h1>
+          <p>Faça uma tentativa sem consultar a explicação. Errar agora ajuda seu cérebro a perceber o que precisa aprender.</p>
+          <div className="activation-prompt"><span>Seu primeiro desafio</span><strong>{lesson.pedagogy.activationPrompt}</strong></div>
+          <div className="lesson-objective"><span>Meta da missão</span><p>{lesson.pedagogy.objective}</p></div>
+          <footer><small>Não vale nota. Tente em voz alta ou mentalmente.</small><button className="student-primary-button" type="button" onClick={() => setStage("theory")}>Ver explicação →</button></footer>
+        </article>
+      ) : null}
+
       {stage === "theory" ? (
         <article className="theory-card">
           <header><div><span>{lesson.unit} · {lesson.skill}</span><h1>{lesson.title}</h1><p>{lesson.summary}</p></div><small>{lesson.estimatedMinutes} minutos</small></header>
+          {lesson.pedagogy ? <div className="lesson-objective"><span>Ao final, você será capaz de</span><p>{lesson.pedagogy.objective}</p></div> : null}
           <section className="theory-copy"><span className="lesson-section-number">01</span><div><h2>Entenda a ideia</h2><p>{lesson.theory}</p></div></section>
           <section className="example-box"><div><span>Exemplo em contexto</span><strong>{lesson.example}</strong></div><div className="audio-actions"><button type="button" onClick={() => speak(lesson.example)}>▶ Ouvir</button><button type="button" onClick={() => speak(lesson.example, true)}>½ Devagar</button></div></section>
           <p className="audio-message" aria-live="polite">{audioMessage}</p>
@@ -170,7 +199,25 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
             </section>
           ) : null}
           <section className="key-points"><span className="lesson-section-number">{lesson.dialogue?.length ? "03" : "02"}</span><div><h2>Guarde estes padrões</h2><ul>{lesson.keyPoints.map((point) => <li key={point}>✓ {point}</li>)}</ul></div></section>
+          {lesson.pedagogy ? <section className="common-mistakes"><h2>Armadilhas comuns</h2><ul>{lesson.pedagogy.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></section> : null}
           <footer><p>Você pode voltar à teoria durante a revisão.</p><button className="student-primary-button" type="button" onClick={() => setStage("quiz")}>Praticar agora →</button></footer>
+        </article>
+      ) : null}
+
+      {stage === "production" && lesson.pedagogy ? (
+        <article className="production-card">
+          <span className="student-kicker">Agora use o inglês</span>
+          <h1>{lesson.pedagogy.productionTask.mode === "SPEAKING" ? "Fale com suas próprias palavras." : "Escreva com suas próprias palavras."}</h1>
+          <p>{lesson.pedagogy.productionTask.prompt}</p>
+          <div className="production-model"><span>Modelo — consulte só se precisar</span><p>{lesson.pedagogy.productionTask.model}</p><button type="button" onClick={() => speak(lesson.pedagogy?.productionTask.model ?? "")}>▶ Ouvir modelo</button></div>
+          <label className="production-draft"><span>{lesson.pedagogy.productionTask.mode === "SPEAKING" ? "Anote palavras-chave para apoiar sua fala (opcional)" : "Escreva sua resposta"}</span><textarea value={productionDraft} onChange={(event) => setProductionDraft(event.target.value)} rows={5} /></label>
+          <div className="production-checklist"><strong>Confira antes de terminar</strong><ul>{lesson.pedagogy.productionTask.checklist.map((item) => <li key={item}>□ {item}</li>)}</ul></div>
+          <fieldset className="confidence-check"><legend>Como você realizou a tarefa?</legend>
+            <label><input type="radio" name="confidence" checked={confidence === "practice"} onChange={() => setConfidence("practice")} /> Ainda preciso praticar</label>
+            <label><input type="radio" name="confidence" checked={confidence === "supported"} onChange={() => setConfidence("supported")} /> Consegui com apoio</label>
+            <label><input type="radio" name="confidence" checked={confidence === "independent"} onChange={() => setConfidence("independent")} /> Consegui sozinho</label>
+          </fieldset>
+          <footer><button className="lesson-secondary-button" type="button" onClick={() => setStage("theory")}>Rever conteúdo</button><button className="student-primary-button" type="button" disabled={!confidence || (lesson.pedagogy.productionTask.mode === "WRITING" && !productionDraft.trim())} onClick={finishLesson}>Concluir missão →</button></footer>
         </article>
       ) : null}
 
@@ -222,6 +269,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
         <article className={`result-card${passed ? " is-passed" : ""}`}>
           <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a missão!" : "A prática faz parte da jornada."}</h1><p>{passed ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP${xpEarned === 15 ? " pela revisão" : ""}.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
           <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>+{xpEarned}</strong><span>XP</span></div></div>
+          {passed && lesson.pedagogy ? <section className="review-prompts"><h2>Retome depois, sem consultar</h2><p>Use estas perguntas amanhã e novamente em alguns dias.</p><ul>{lesson.pedagogy.reviewPrompts.map((prompt) => <li key={prompt}>{prompt}</li>)}</ul></section> : null}
           <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" onClick={restart}>Tentar novamente</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href={basePath}>Voltar ao painel →</Link></div>
         </article>
       ) : null}

@@ -37,6 +37,40 @@ UNITS = [
                     "My name is... apresenta seu nome.",
                     "Nice to meet you significa “Prazer em conhecer você”.",
                 ],
+                "pedagogy": {
+                    "objective": (
+                        "Cumprimentar alguém, dizer seu nome e responder a uma apresentação "
+                        "em cerca de 30 segundos."
+                    ),
+                    "activation_prompt": (
+                        "Sem consultar a explicação, tente dizer em inglês: “Olá, meu nome é…” e "
+                        "“Prazer em conhecer você”."
+                    ),
+                    "common_mistakes": [
+                        "Good night costuma ser despedida à noite; ao chegar, use Good evening.",
+                        "Para dizer seu nome, use My name is…; não traduza literalmente “I have name”.",
+                    ],
+                    "production_task": {
+                        "mode": "SPEAKING",
+                        "prompt": (
+                            "Imagine que você encontrou um colega no primeiro dia de curso. "
+                            "Cumprimente, diga seu nome, pergunte como a pessoa está e encerre com cortesia."
+                        ),
+                        "model": (
+                            "Hi! My name is Ana. How are you? I'm fine, thank you. Nice to meet you."
+                        ),
+                        "checklist": [
+                            "Usei uma saudação adequada.",
+                            "Disse meu nome com My name is… ou I'm…",
+                            "Fiz ou respondi How are you?",
+                            "Encerrei com Nice to meet you.",
+                        ],
+                    },
+                    "review_prompts": [
+                        "Apresente-se em duas frases sem olhar o modelo.",
+                        "Qual saudação você usaria às 9h e qual usaria às 19h?",
+                    ],
+                },
                 "questions": [
                     {
                         "type": "MCQ",
@@ -79,6 +113,35 @@ UNITS = [
                 ),
                 "example": "I am a student. She is a teacher. We are friends.",
                 "key_points": ["I am", "He / She / It is", "You / We / They are"],
+                "pedagogy": {
+                    "objective": (
+                        "Descrever quem você é e identificar outras pessoas usando am, is e are."
+                    ),
+                    "activation_prompt": (
+                        "Complete de memória: I ___ a student; she ___ my teacher; we ___ friends."
+                    ),
+                    "common_mistakes": [
+                        "I sempre combina com am — nunca diga I is ou I are.",
+                        "Em inglês, mantenha o sujeito: diga She is tired, não apenas Is tired.",
+                    ],
+                    "production_task": {
+                        "mode": "SPEAKING",
+                        "prompt": (
+                            "Diga três frases verdadeiras: uma sobre você, uma sobre outra pessoa "
+                            "e uma sobre você junto com outras pessoas."
+                        ),
+                        "model": "I am Brazilian. My friend is a student. We are happy.",
+                        "checklist": [
+                            "Usei I am em uma frase.",
+                            "Usei he, she ou it + is em uma frase.",
+                            "Usei we, you ou they + are em uma frase.",
+                        ],
+                    },
+                    "review_prompts": [
+                        "Crie uma frase verdadeira com cada forma: am, is e are.",
+                        "Transforme She is tired em negativa e depois em pergunta.",
+                    ],
+                },
                 "questions": [
                     {
                         "type": "MCQ",
@@ -129,6 +192,35 @@ UNITS = [
                 ),
                 "example": "I have an apple and a book. The book is blue.",
                 "key_points": ["a + som consonantal", "an + som vocálico", "the + item específico"],
+                "pedagogy": {
+                    "objective": (
+                        "Escolher a, an ou the para nomear objetos e retomar algo já conhecido."
+                    ),
+                    "activation_prompt": (
+                        "Olhe ao redor e tente nomear dois objetos em inglês usando a ou an."
+                    ),
+                    "common_mistakes": [
+                        "A escolha entre a e an depende do som: an hour, mas a university.",
+                        "Use the quando o ouvinte consegue identificar exatamente o item mencionado.",
+                    ],
+                    "production_task": {
+                        "mode": "WRITING",
+                        "prompt": (
+                            "Escreva três frases sobre objetos próximos. Apresente dois objetos com "
+                            "a/an e depois retome um deles com the."
+                        ),
+                        "model": "I have a phone and an umbrella. The phone is black.",
+                        "checklist": [
+                            "Usei a antes de um som consonantal.",
+                            "Usei an antes de um som vocálico.",
+                            "Usei the para retomar um objeto conhecido.",
+                        ],
+                    },
+                    "review_prompts": [
+                        "Explique pelo som por que dizemos an hour e a university.",
+                        "Crie duas frases: apresente um objeto e depois retome-o com the.",
+                    ],
+                },
                 "questions": [
                     {
                         "type": "MCQ",
@@ -177,6 +269,36 @@ UNITS = [
                     "it = coisas e animais",
                     "ele/ela = he / she (só para pessoas)",
                 ],
+                "pedagogy": {
+                    "objective": (
+                        "Substituir nomes de pessoas e objetos pelo pronome correto em frases simples."
+                    ),
+                    "activation_prompt": (
+                        "Sem olhar a lista, escolha um pronome para Maria, my phone, João and I "
+                        "e Ana and Pedro."
+                    ),
+                    "common_mistakes": [
+                        "You usa are tanto no singular quanto no plural; you is não existe.",
+                        "Objetos precisam de it como sujeito: diga It is new, não apenas Is new.",
+                    ],
+                    "production_task": {
+                        "mode": "WRITING",
+                        "prompt": (
+                            "Apresente quatro pessoas ou objetos ao seu redor. Em cada segunda frase, "
+                            "evite repetir o nome e use o pronome correspondente."
+                        ),
+                        "model": "This is Paula. She is my friend. This is my laptop. It is new.",
+                        "checklist": [
+                            "Usei he ou she para uma pessoa.",
+                            "Usei it para um objeto.",
+                            "Usei they para mais de uma pessoa ou coisa.",
+                        ],
+                    },
+                    "review_prompts": [
+                        "Troque os nomes por pronomes: Maria, the car, João and I, the children.",
+                        "Crie uma frase com you are falando com duas pessoas.",
+                    ],
+                },
                 "questions": [
                     {
                         "type": "MCQ",

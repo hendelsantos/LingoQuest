@@ -137,6 +137,24 @@ class DemoLessonDetailView(APIView):
                 "example": lesson.example,
                 "keyPoints": lesson.key_points,
                 "dialogue": lesson.dialogue,
+                **(
+                    {
+                        "pedagogy": {
+                            "objective": lesson.pedagogy["objective"],
+                            "activationPrompt": lesson.pedagogy["activation_prompt"],
+                            "commonMistakes": lesson.pedagogy["common_mistakes"],
+                            "productionTask": {
+                                "mode": lesson.pedagogy["production_task"]["mode"],
+                                "prompt": lesson.pedagogy["production_task"]["prompt"],
+                                "model": lesson.pedagogy["production_task"]["model"],
+                                "checklist": lesson.pedagogy["production_task"]["checklist"],
+                            },
+                            "reviewPrompts": lesson.pedagogy["review_prompts"],
+                        }
+                    }
+                    if lesson.pedagogy
+                    else {}
+                ),
                 "passingPercent": lesson.passing_percent,
                 "questions": [
                     question_payload(question) for question in lesson.questions.all()

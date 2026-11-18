@@ -30,8 +30,8 @@ real, antes de ampliar dashboards administrativos.
 
 ## Pedagogia: gamificar sem esvaziar o aprendizado
 
-As oito missões e 24 questões validam o motor, não validam que a plataforma “ensina inglês”. Um
-piloto pedagógico minimamente confiável deve ter:
+As 105 missões e 538 questões demonstram amplitude e validam o motor, mas não comprovam sozinhas
+que a plataforma “ensina inglês”. Um piloto pedagógico minimamente confiável deve ter:
 
 - diagnóstico inicial curto e avaliação final equivalente, sem chamar o resultado de certificação;
 - prática distribuída em três a cinco contatos semanais;
@@ -85,7 +85,7 @@ transformar essa inferência em promessa de mercado. Fonte:
 | Direito à aula | `Plan.live_class_type` não controla quantidade | Definir encontros/mês, duração, grupo e política de excedente |
 | Cancelamento | Não há antecedência, reposição ou no-show | Política manual explícita antes de automatizar |
 | Acompanhamento | Nota do aluno é privada; falta registro pedagógico do professor | Criar observação pedagógica separada e auditável numa fase futura |
-| Currículo | Oito missões não formam um A1 completo | Chamar de “A1 Foundations — piloto”, nunca de A1 concluído oficial |
+| Currículo | Amplitude A1–C2 sem revisão integral de professor ou avaliação equivalente | Validar primeiro o A1 em piloto e não tratar conclusão como certificação oficial |
 | Métrica de aprendizagem | KPIs medem uso, não ganho | Adicionar avaliação inicial/final e rubrica de fala/escrita |
 | Conteúdo | Revisão pedagógica ainda não tem responsável | Professor aprova toda publicação e versionamento |
 | Dados | LGPD citada, mas faltam políticas operacionais | Definir retenção, atendimento ao titular e termos antes de dados reais |

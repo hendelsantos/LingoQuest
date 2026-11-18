@@ -31,6 +31,53 @@ PROMPT_MAX = 300
 EXPLANATION_MAX = 300
 
 
+def check_pedagogy(report: "Report", path: str, pedagogy: object) -> None:
+    if pedagogy is None:
+        return
+    if not isinstance(pedagogy, dict):
+        report.error(f"{path}.pedagogy deve ser um dicionário.")
+        return
+
+    for key in ("objective", "activation_prompt"):
+        value = pedagogy.get(key)
+        if not isinstance(value, str) or not value.strip():
+            report.error(f"{path}.pedagogy.{key} é obrigatório.")
+
+    for key, minimum, maximum in (
+        ("common_mistakes", 2, 4),
+        ("review_prompts", 2, 4),
+    ):
+        values = pedagogy.get(key)
+        if not isinstance(values, list) or not minimum <= len(values) <= maximum:
+            report.error(
+                f"{path}.pedagogy.{key} exige de {minimum} a {maximum} itens."
+            )
+        elif any(not isinstance(value, str) or not value.strip() for value in values):
+            report.error(f"{path}.pedagogy.{key} deve conter apenas textos não vazios.")
+
+    task = pedagogy.get("production_task")
+    if not isinstance(task, dict):
+        report.error(f"{path}.pedagogy.production_task deve ser um dicionário.")
+        return
+    if task.get("mode") not in {"SPEAKING", "WRITING"}:
+        report.error(
+            f"{path}.pedagogy.production_task.mode deve ser SPEAKING ou WRITING."
+        )
+    for key in ("prompt", "model"):
+        value = task.get(key)
+        if not isinstance(value, str) or not value.strip():
+            report.error(f"{path}.pedagogy.production_task.{key} é obrigatório.")
+    checklist = task.get("checklist")
+    if not isinstance(checklist, list) or not 2 <= len(checklist) <= 5:
+        report.error(
+            f"{path}.pedagogy.production_task.checklist exige de 2 a 5 itens."
+        )
+    elif any(not isinstance(value, str) or not value.strip() for value in checklist):
+        report.error(
+            f"{path}.pedagogy.production_task.checklist deve conter textos não vazios."
+        )
+
+
 class Report:
     def __init__(self, label: str) -> None:
         self.label = label
@@ -165,6 +212,8 @@ def check_lesson(
         report.error(f"{path}.key_points exige de 3 a 6 itens.")
     elif any(not isinstance(point, str) or not point.strip() for point in key_points):
         report.error(f"{path}.key_points deve conter apenas textos não vazios.")
+
+    check_pedagogy(report, path, lesson.get("pedagogy"))
 
     dialogue = lesson.get("dialogue")
     if dialogue is not None:

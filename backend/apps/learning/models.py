@@ -62,6 +62,7 @@ class Lesson(models.Model):
     example = models.TextField()
     key_points = models.JSONField(default=list)
     dialogue = models.JSONField(default=list, blank=True)
+    pedagogy = models.JSONField(default=dict, blank=True)
     estimated_minutes = models.PositiveSmallIntegerField(default=8)
     position = models.PositiveSmallIntegerField()
     xp_reward = models.PositiveSmallIntegerField(default=60)

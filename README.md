@@ -12,6 +12,7 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - usuário customizado criado antes da primeira migration;
 - health check, OpenAPI em desenvolvimento, landing e ambiente do aluno responsivos;
 - currículo demonstrativo completo de A1 a C2, com 105 missões e 538 questões;
+- piloto da Missão 2.0 nas quatro primeiras aulas A1, com ativação, produção e revisão;
 - teoria, diálogos, áudio de referência, quatro tipos de exercício e correção no servidor;
 - painel e trilha demonstrativos com progresso salvo no navegador;
 - laboratório de aula ao vivo com câmera local real, controles de mídia e exercício interativo;
@@ -111,6 +112,7 @@ SPEC.md        atalho versionado para a especificação original
 ```
 
 Leia [análise de produto](docs/product-analysis.md), [arquitetura](docs/architecture.md),
-[plano de evolução e implantação](docs/product-evolution-plan.md) e
+[plano de evolução e implantação](docs/product-evolution-plan.md),
+[plano de evolução pedagógica](docs/pedagogical-evolution-plan.md) e
 [roadmap de entrega](docs/roadmap.md) antes de ampliar o escopo.
 

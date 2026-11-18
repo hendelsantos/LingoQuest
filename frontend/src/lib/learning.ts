@@ -56,12 +56,28 @@ export type DialogueLine = {
   line: string;
 };
 
+export type ProductionTask = {
+  mode: "SPEAKING" | "WRITING";
+  prompt: string;
+  model: string;
+  checklist: string[];
+};
+
+export type LessonPedagogy = {
+  objective: string;
+  activationPrompt: string;
+  commonMistakes: string[];
+  productionTask: ProductionTask;
+  reviewPrompts: string[];
+};
+
 export type LessonDetail = LessonSummary & {
   unit: string;
   theory: string;
   example: string;
   keyPoints: string[];
   dialogue?: DialogueLine[];
+  pedagogy?: LessonPedagogy;
   passingPercent: number;
   questions: LessonQuestion[];
 };

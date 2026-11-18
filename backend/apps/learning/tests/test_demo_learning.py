@@ -190,3 +190,25 @@ def test_lesson_detail_includes_dialogue_and_types(seeded_course):
     assert "LISTENING" in types
     ordering = next(q for q in payload["questions"] if q["type"] == "ORDERING")
     assert sorted(ordering["tokens"]) == sorted(["How", "is", "it", "going"])
+
+
+@pytest.mark.django_db
+def test_enriched_lesson_exposes_pedagogical_cycle(seeded_course):
+    response = APIClient().get(reverse("demo-lesson-detail", kwargs={"slug": "hello"}))
+
+    assert response.status_code == 200
+    pedagogy = response.json()["pedagogy"]
+    assert "30 segundos" in pedagogy["objective"]
+    assert pedagogy["activationPrompt"]
+    assert len(pedagogy["commonMistakes"]) >= 2
+    assert pedagogy["productionTask"]["mode"] == "SPEAKING"
+    assert len(pedagogy["productionTask"]["checklist"]) >= 2
+    assert len(pedagogy["reviewPrompts"]) >= 2
+
+
+@pytest.mark.django_db
+def test_non_enriched_lesson_keeps_backward_compatible_payload(seeded_course):
+    response = APIClient().get(reverse("demo-lesson-detail", kwargs={"slug": "routine"}))
+
+    assert response.status_code == 200
+    assert "pedagogy" not in response.json()
