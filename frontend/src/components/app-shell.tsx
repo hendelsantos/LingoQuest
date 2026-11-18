@@ -3,8 +3,18 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { StudentNav } from "@/components/student-nav";
+import { LogoutButton } from "@/components/logout-button";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  mode = "demo",
+  basePath = "/app",
+}: {
+  children: ReactNode;
+  mode?: "demo" | "account";
+  basePath?: string;
+}) {
+  const isDemo = mode === "demo";
   return (
     <div className="student-shell">
       <aside className="student-sidebar">
@@ -18,14 +28,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <p className="student-nav-label">Meu aprendizado</p>
         <Suspense fallback={<div className="student-nav-skeleton" />}>
-          <StudentNav />
+          <StudentNav basePath={basePath} />
         </Suspense>
 
         <div className="student-sidebar-footer">
           <Link href="/" className="sidebar-school-link">Conhecer a escola ↗</Link>
-          <p>Ambiente de demonstração</p>
-          <div className="demo-user"><span>A</span> Aluno visitante</div>
-          <small>Preview público · progresso neste navegador</small>
+          <p>{isDemo ? "Ambiente de demonstração" : "Conta do aluno"}</p>
+          <div className="demo-user"><span>A</span> {isDemo ? "Aluno visitante" : "Área pessoal"}</div>
+          {isDemo ? <small>Preview público · progresso neste navegador</small> : <LogoutButton />}
         </div>
       </aside>
 
@@ -36,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>LingoQuest</span>
             <strong>Ambiente de aprendizado</strong>
           </div>
-          <span className="demo-pill">Modo demonstração</span>
+          <span className="demo-pill">{isDemo ? "Modo demonstração" : "Sessão segura"}</span>
         </header>
         <main className="student-main">{children}</main>
       </div>

@@ -120,6 +120,13 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "10/minute",
+        "invitation": "30/hour",
+        "invitation_accept": "10/minute",
+        "password_reset": "10/hour",
+        "password_reset_confirm": "10/minute",
+    },
 }
 
 SPECTACULAR_SETTINGS = {
@@ -127,6 +134,10 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API da escola digital LingoQuest.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "UserRoleEnum": "apps.accounts.models.User.Role",
+        "InvitableRoleEnum": "apps.accounts.serializers.INVITABLE_ROLE_CHOICES",
+    },
 }
 
 LIVEKIT_ENABLED = env("LIVEKIT_ENABLED")

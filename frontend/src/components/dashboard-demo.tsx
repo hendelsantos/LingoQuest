@@ -14,7 +14,7 @@ import {
 } from "@/lib/demo-progress";
 import { flattenLessons, getCourseOutline, type CourseOutline } from "@/lib/learning";
 
-export function DashboardDemo() {
+export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
   const [outline, setOutline] = useState<CourseOutline | null>(null);
   const [progress, setProgress] = useState<DemoProgress>(emptyProgress);
   const [error, setError] = useState("");
@@ -50,7 +50,7 @@ export function DashboardDemo() {
           <span className="student-kicker">Sua jornada começa aqui</span>
           <h1><span>Small steps.</span><br />Big adventures.</h1>
           <p>Aprenda inglês um desafio de cada vez. Finn está pronto para a próxima missão!</p>
-          <Link className="student-primary-button" href={nextLesson ? `/app/learn/${nextLesson.slug}` : "/app/learn"}>
+          <Link className="student-primary-button" href={nextLesson ? `${basePath}/learn/${nextLesson.slug}` : `${basePath}/learn`}>
             {stats.completedCount ? "Continuar aprendendo" : "Começar primeira missão"} →
           </Link>
         </div>
@@ -65,7 +65,7 @@ export function DashboardDemo() {
 
       <div className="student-section-heading">
         <div><h2>Your learning path</h2><p>Onde você está agora</p></div>
-        <Link href="/app/learn">Ver trilha →</Link>
+        <Link href={`${basePath}/learn`}>Ver trilha →</Link>
       </div>
 
       {error ? <div className="student-error" role="alert">{error} <button onClick={() => window.location.reload()}>Tentar novamente</button></div> : null}
@@ -82,7 +82,7 @@ export function DashboardDemo() {
                 <div className="compact-lesson" key={lesson.slug}>
                   <span className={done ? "is-done" : ""}>{done ? "✓" : String(index + 1).padStart(2, "0")}</span>
                   <div><strong>{lesson.title}</strong><small>{lesson.summary} · {lesson.skill}</small></div>
-                  <Link href={`/app/learn/${lesson.slug}`}>{done ? "Revisar" : "Jogar"}</Link>
+                  <Link href={`${basePath}/learn/${lesson.slug}`}>{done ? "Revisar" : "Jogar"}</Link>
                 </div>
               );
             })}
@@ -91,7 +91,7 @@ export function DashboardDemo() {
         </article>
 
         <aside className="dashboard-aside">
-          <article className="live-card"><span>• Aulas ao vivo</span><h3>Live classroom</h3><p>Teste câmera, microfone e uma atividade dentro da sala demonstrativa.</p><Link href="/app/live">Ver sala de aula →</Link></article>
+          <article className="live-card"><span>• Aulas ao vivo</span><h3>Live classroom</h3><p>Teste câmera, microfone e uma atividade dentro da sala demonstrativa.</p><Link href={`${basePath}/live`}>Ver sala de aula →</Link></article>
           <article className="mini-card"><span>✳</span><div><h3>Mini challenge</h3><p>Conclua uma missão e desbloqueie 60 XP.</p></div></article>
           <article className="mini-card"><span>✎</span><div><h3>Seu caderno digital</h3><p>Guarde expressões e revise vocabulário.</p><button disabled>Abrir em breve</button></div></article>
         </aside>

@@ -14,7 +14,7 @@ import {
 
 type Stage = "theory" | "quiz" | "result";
 
-export function LessonPlayer({ slug, courseSlug }: { slug: string; courseSlug?: string }) {
+export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: string; courseSlug?: string; basePath?: string }) {
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [stage, setStage] = useState<Stage>("theory");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -48,7 +48,7 @@ export function LessonPlayer({ slug, courseSlug }: { slug: string; courseSlug?: 
   );
   const passed = Boolean(lesson && score >= lesson.passingPercent);
   const orderedTokens = currentQuestion?.tokens ?? [];
-  const pathHref = courseSlug ? `/app/learn?course=${encodeURIComponent(courseSlug)}` : "/app/learn";
+  const pathHref = courseSlug ? `${basePath}/learn?course=${encodeURIComponent(courseSlug)}` : `${basePath}/learn`;
   const canSubmit = Boolean(currentQuestion && (
     (currentQuestion.type === "MCQ" && selectedChoice !== null)
     || (currentQuestion.type === "ORDERING" && orderedTokens.length > 0
@@ -222,7 +222,7 @@ export function LessonPlayer({ slug, courseSlug }: { slug: string; courseSlug?: 
         <article className={`result-card${passed ? " is-passed" : ""}`}>
           <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a missão!" : "A prática faz parte da jornada."}</h1><p>{passed ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP${xpEarned === 15 ? " pela revisão" : ""}.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
           <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>+{xpEarned}</strong><span>XP</span></div></div>
-          <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" onClick={restart}>Tentar novamente</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href="/app">Voltar ao painel →</Link></div>
+          <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" onClick={restart}>Tentar novamente</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href={basePath}>Voltar ao painel →</Link></div>
         </article>
       ) : null}
     </div>

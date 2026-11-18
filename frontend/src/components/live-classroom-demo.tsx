@@ -7,7 +7,7 @@ import { checkClassroomAnswer, demoClassroomExercise } from "@/lib/live-classroo
 
 type MediaStatus = "idle" | "requesting" | "ready" | "error";
 
-export function LiveClassroomDemo() {
+export function LiveClassroomDemo({ basePath = "/app" }: { basePath?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [mediaStatus, setMediaStatus] = useState<MediaStatus>("idle");
@@ -91,7 +91,7 @@ export function LiveClassroomDemo() {
     <div className="classroom-page">
       <header className="classroom-header">
         <div>
-          <Link href="/app/live">← Voltar para aulas</Link>
+          <Link href={`${basePath}/live`}>← Voltar para aulas</Link>
           <span className="classroom-kicker">Sala de demonstração</span>
           <h1>Introductions &amp; verb to be</h1>
         </div>

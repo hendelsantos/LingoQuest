@@ -39,9 +39,7 @@ export default function Home() {
         <nav aria-label="Navegação principal">
           <a href="#metodo">Como funciona</a>
           <a href="#planos">Planos</a>
-          <a className="button button-ghost" href="#planos">
-            Primeira turma
-          </a>
+          <Link className="button button-ghost" href="/login">Entrar</Link>
         </nav>
       </header>
 
@@ -58,7 +56,7 @@ export default function Home() {
             com um professor que acompanha de verdade a sua evolução.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/app">
+            <Link className="button button-primary" href="/demo">
               Testar a plataforma
             </Link>
             <a className="text-link" href="#metodo">
@@ -125,7 +123,7 @@ export default function Home() {
             ou cobrança antes da hora.
           </p>
         </div>
-        <Link className="button button-light" href="/app">
+        <Link className="button button-light" href="/demo">
           Entrar no ambiente demo
         </Link>
       </section>

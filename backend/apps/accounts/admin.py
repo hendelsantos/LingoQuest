@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import User
+from .models import Invitation, StudentProfile, TeacherProfile, User
 
 
 @admin.register(User)
@@ -35,4 +35,16 @@ class UserAdmin(DjangoUserAdmin):
             },
         ),
     )
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+    list_display = ("recipient_email", "role", "expires_at", "used_at", "invited_by")
+    list_filter = ("role", "used_at")
+    search_fields = ("recipient_email",)
+    readonly_fields = ("token_hash", "created_at", "used_at")
+
+
+admin.site.register(StudentProfile)
+admin.site.register(TeacherProfile)
 

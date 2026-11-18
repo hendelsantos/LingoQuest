@@ -42,8 +42,12 @@ def _park_positions(queryset) -> None:
 
 def _delete_questions(lesson: Lesson) -> None:
     """Remove o gabarito respeitando os FKs protegidos do domínio."""
-    Choice.objects.filter(question__lesson=lesson).delete()
-    lesson.questions.all().delete()
+    question_ids = list(lesson.questions.values_list("id", flat=True))
+    if not question_ids:
+        return
+    # IDs materializados evitam que o PostgreSQL planeje um JOIN caro para cada lição.
+    Choice.objects.filter(question_id__in=question_ids).delete()
+    Question.objects.filter(id__in=question_ids).delete()
 
 
 def _sync_lesson(unit: Unit, lesson_data: dict, position: int) -> None:

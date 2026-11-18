@@ -21,7 +21,7 @@ import {
 
 const DEFAULT_COURSE = "a1-foundations";
 
-export function LearningPath() {
+export function LearningPath({ basePath = "/app" }: { basePath?: string }) {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [selectedSlug, setSelectedSlug] = useState(DEFAULT_COURSE);
   const [outline, setOutline] = useState<CourseOutline | null>(null);
@@ -72,7 +72,7 @@ export function LearningPath() {
     setOutline(null);
     setError("");
     setSelectedSlug(slug);
-    window.history.replaceState(null, "", `/app/learn?course=${encodeURIComponent(slug)}`);
+    window.history.replaceState(null, "", `${basePath}/learn?course=${encodeURIComponent(slug)}`);
   }
 
   const lessons = useMemo(() => flattenLessons(outline), [outline]);
@@ -127,7 +127,7 @@ export function LearningPath() {
                   <article className={`lesson-card${completed ? " is-completed" : ""}`} key={lesson.slug}>
                     <div className="lesson-card-meta"><span>{lesson.skill}</span><small>{lesson.estimatedMinutes} min · +{lesson.xpReward} XP</small></div>
                     <h3>{lesson.title}</h3><p>{lesson.summary}</p>
-                    <div className="lesson-card-footer"><span>{completed ? `✓ Concluída · ${completed.score}%` : "Pronta para começar"}</span><Link href={`/app/learn/${lesson.slug}?course=${encodeURIComponent(selectedSlug)}`}>{completed ? "Revisar" : "Começar"} →</Link></div>
+                    <div className="lesson-card-footer"><span>{completed ? `✓ Concluída · ${completed.score}%` : "Pronta para começar"}</span><Link href={`${basePath}/learn/${lesson.slug}?course=${encodeURIComponent(selectedSlug)}`}>{completed ? "Revisar" : "Começar"} →</Link></div>
                   </article>
                 );
               })}

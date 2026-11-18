@@ -15,17 +15,20 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - teoria, diálogos, áudio de referência, quatro tipos de exercício e correção no servidor;
 - painel e trilha demonstrativos com progresso salvo no navegador;
 - laboratório de aula ao vivo com câmera local real, controles de mídia e exercício interativo;
+- identidade por convite para alunos e professores, login por sessão, logout e recuperação de senha;
+- áreas protegidas por papel para aluno, professor e administração;
 - configurações separadas para desenvolvimento, testes e produção;
 - testes, lint, typecheck, build e CI;
 - frontend, backend e PostgreSQL publicados no Railway com deploy automático pela `main`.
 
-Autenticação, matrícula persistida por aluno, pagamentos e videoconferência entre duas contas
-**ainda não estão implementados**. O laboratório usa somente os dispositivos locais e informa
-quando não existe um professor conectado; o modo público não simula esses recursos.
+Matrícula persistida por aluno, progresso associado à conta, pagamentos e videoconferência entre
+duas contas **ainda não estão implementados**. O laboratório usa somente os dispositivos locais e
+informa quando não existe um professor conectado; o modo público não simula esses recursos.
 
 Produção: <https://frontend-production-a0b865d3.up.railway.app/><br>
-Ambiente de aprendizado: <https://frontend-production-a0b865d3.up.railway.app/app>
-Laboratório da sala: <https://frontend-production-a0b865d3.up.railway.app/app/live>
+Login: <https://frontend-production-a0b865d3.up.railway.app/login><br>
+Demonstração pública: <https://frontend-production-a0b865d3.up.railway.app/demo><br>
+Laboratório da sala: <https://frontend-production-a0b865d3.up.railway.app/demo/live>
 
 ## Pré-requisitos
 
@@ -70,6 +73,14 @@ OpenAPI (desenvolvimento): <http://127.0.0.1:8000/api/docs/>
 
 O navegador acessa a API por `/api/*` na origem do Next.js. O rewrite usa
 `NEXT_INTERNAL_API_BASE_URL` apenas no servidor e preserva cookies/CSRF na mesma origem.
+
+Crie o primeiro administrador sem senha padrão e use a área `/school/invitations` para convidar
+as demais contas:
+
+```bash
+cd backend
+uv run python manage.py createsuperuser
+```
 
 Para popular ou atualizar o currículo completo localmente:
 

@@ -5,8 +5,8 @@ pendências críticas de autorização, integridade ou build na anterior.
 
 | Fase | Resultado demonstrável | Gate |
 |---|---|---|
-| 0 — Fundação | API/DB/web executam, landing real, CI e arquitetura registradas | health, lint, testes e build verdes |
-| 1 — Identidade | admin convida; usuário aceita, entra e sai | CSRF, papéis e desativação testados |
+| 0 — Fundação ✓ | API/DB/web executam, landing real, CI e arquitetura registradas | health, lint, testes e build verdes |
+| 1 — Identidade ✓ | admin convida; usuário aceita, entra e sai | CSRF, papéis e desativação testados |
 | 2A — Currículo | admin publica A1 Foundations e aluno matriculado vê trilha | seed idempotente, gabarito não vaza |
 | 2B — Missão | aluno responde, recarrega, conclui e recebe XP uma vez | concorrência e revisão testadas |
 | 3 — Ciclo humano | professor vê evidências, atribui tarefa e agenda aula externa | aluno alheio invisível; conflito de agenda |
@@ -16,7 +16,7 @@ pendências críticas de autorização, integridade ou build na anterior.
 | 7 — Pagamento | Asaas sandbox e webhook idempotente | duplicata/fraude/inconsistência testadas |
 | 8 — Staging | HTTPS, E2E, logs, backup/restauração e go-live | checklist assinado antes de dados reais |
 
-## Próxima entrega: Fase 1
+## Entrega concluída: Fase 1
 
 Fluxo vertical:
 
@@ -29,6 +29,16 @@ Fluxo vertical:
 
 Testes obrigatórios: CSRF ausente, token expirado/reutilizado, papel enviado pelo cliente, login
 inativo, enumeração na recuperação e acesso de aluno a rota administrativa.
+
+O fluxo também inclui recuperação de senha genérica, perfis mínimos de aluno/professor e layouts
+protegidos em `/app`, `/teacher` e `/school`. A demonstração sem conta foi isolada em `/demo`.
+
+## Próxima entrega: Fase 2A
+
+Vincular o currículo já publicado a matrículas reais. O administrador matricula o aluno; a API
+autenticada lista somente cursos publicados aos quais ele tem acesso; a interface deixa de tratar o
+progresso local do preview como dados da conta. Em seguida, a Fase 2B persiste tentativas, progresso
+e XP com idempotência e concorrência testadas.
 
 ## Disciplina de entrega
 
