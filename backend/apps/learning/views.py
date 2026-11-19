@@ -13,9 +13,24 @@ from rest_framework.views import APIView
 from apps.accounts.models import User
 from apps.accounts.permissions import IsAdminRole, IsStudentRole
 
+from .attempts import (
+    AttemptStateError,
+    attempt_answer_payload,
+    attempt_payload,
+    confirm_attempt_answer,
+    finish_attempt,
+    start_or_resume_attempt,
+    student_learning_summary,
+)
 from .content.assessments import ASSESSMENTS
-from .grading import is_close, is_equivalent, similarity
-from .models import Course, Enrollment, Lesson, Question
+from .grading import (
+    InvalidAnswer,
+    error_category,
+    grade_answer,
+    is_close,
+    is_equivalent,
+)
+from .models import Course, Enrollment, Lesson, LessonAttempt, LessonProgress, Question
 from .serializers import (
     AnswerFeedbackSerializer,
     AnswerRequestSerializer,
@@ -27,12 +42,19 @@ from .serializers import (
     EnrollmentCreateSerializer,
     EnrollmentSerializer,
     EnrollmentStatusSerializer,
+    LessonAttemptSerializer,
     LessonDetailSerializer,
+    StudentLearningSummarySerializer,
 )
 
 
-def lesson_summary(lesson: Lesson) -> dict:
-    return {
+def lesson_summary(
+    lesson: Lesson,
+    progress: LessonProgress | None = None,
+    *,
+    in_progress: bool | None = None,
+) -> dict:
+    payload = {
         "slug": lesson.slug,
         "title": lesson.title,
         "skill": lesson.skill,
@@ -41,15 +63,38 @@ def lesson_summary(lesson: Lesson) -> dict:
         "xpReward": lesson.xp_reward,
         "position": lesson.position,
     }
+    if progress is not None:
+        payload.update(
+            {
+                "completed": progress.completed,
+                "bestScore": progress.best_score,
+            }
+        )
+    if in_progress is not None:
+        payload["inProgress"] = in_progress
+    return payload
 
 
-def course_outline_payload(course: Course) -> dict:
+def course_outline_payload(
+    course: Course,
+    progress_by_lesson: dict[int, LessonProgress] | None = None,
+    in_progress_lesson_ids: set[int] | None = None,
+) -> dict:
+    progress_by_lesson = progress_by_lesson or {}
+    in_progress_lesson_ids = in_progress_lesson_ids or set()
     units = [
         {
             "title": unit.title,
             "description": unit.description,
             "position": unit.position,
-            "lessons": [lesson_summary(lesson) for lesson in unit.lessons.all()],
+            "lessons": [
+                lesson_summary(
+                    lesson,
+                    progress_by_lesson.get(lesson.id),
+                    in_progress=(lesson.id in in_progress_lesson_ids),
+                )
+                for lesson in unit.lessons.all()
+            ],
         }
         for unit in course.units.all()
     ]
@@ -235,7 +280,23 @@ class AuthorizedCourseOutlineView(APIView):
             ),
             slug=slug,
         )
-        return Response(course_outline_payload(course))
+        progress_by_lesson = {
+            progress.lesson_id: progress
+            for progress in LessonProgress.objects.filter(
+                student=request.user,
+                lesson__unit__course=course,
+            )
+        }
+        in_progress_lesson_ids = set(
+            LessonAttempt.objects.filter(
+                student=request.user,
+                lesson__unit__course=course,
+                status=LessonAttempt.Status.IN_PROGRESS,
+            ).values_list("lesson_id", flat=True)
+        )
+        return Response(
+            course_outline_payload(course, progress_by_lesson, in_progress_lesson_ids)
+        )
 
 
 class AuthorizedLessonDetailView(APIView):
@@ -251,6 +312,109 @@ class AuthorizedLessonDetailView(APIView):
             ).prefetch_related("questions__choices"),
         )
         return Response(lesson_detail_payload(lesson))
+
+
+def authorized_attempts(user: User):
+    return LessonAttempt.objects.filter(
+        student=user,
+        lesson__unit__course__in=enrolled_courses(user),
+    ).select_related("lesson")
+
+
+class StudentLearningSummaryView(APIView):
+    permission_classes = (IsStudentRole,)
+
+    @extend_schema(responses=StudentLearningSummarySerializer)
+    def get(self, request):
+        return Response(student_learning_summary(request.user))
+
+
+class LessonAttemptStartView(APIView):
+    permission_classes = (IsStudentRole,)
+
+    @extend_schema(request=None, responses=LessonAttemptSerializer)
+    def post(self, request, slug: str):
+        lesson = get_object_or_404(
+            Lesson.objects.filter(
+                slug=slug,
+                status=Lesson.Status.PUBLISHED,
+                unit__course__in=enrolled_courses(request.user),
+            ).select_related("unit__course")
+        )
+        try:
+            attempt = start_or_resume_attempt(student=request.user, lesson=lesson)
+        except AttemptStateError as exc:
+            return Response(
+                {"code": exc.code, "detail": exc.detail},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(attempt_payload(attempt))
+
+
+class LessonAttemptDetailView(APIView):
+    permission_classes = (IsStudentRole,)
+
+    @extend_schema(responses=LessonAttemptSerializer)
+    def get(self, request, attempt_id):
+        attempt = get_object_or_404(authorized_attempts(request.user), id=attempt_id)
+        return Response(attempt_payload(attempt))
+
+
+class LessonAttemptAnswerView(APIView):
+    permission_classes = (IsStudentRole,)
+
+    @extend_schema(request=AnswerRequestSerializer, responses=AnswerFeedbackSerializer)
+    def post(self, request, attempt_id):
+        get_object_or_404(authorized_attempts(request.user), id=attempt_id)
+        serializer = AnswerRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = {
+            "choiceId": serializer.validated_data.get("choiceId"),
+            "answer": serializer.validated_data.get("answer"),
+            "order": serializer.validated_data.get("order"),
+        }
+        try:
+            answer = confirm_attempt_answer(
+                attempt_id=attempt_id,
+                student=request.user,
+                question_id=serializer.validated_data["questionId"],
+                data=data,
+            )
+        except InvalidAnswer as exc:
+            return Response(
+                {"code": exc.code, "detail": exc.detail},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except AttemptStateError as exc:
+            return Response(
+                {"code": exc.code, "detail": exc.detail},
+                status=(
+                    status.HTTP_404_NOT_FOUND
+                    if exc.code == "LESSON_NOT_AVAILABLE"
+                    else status.HTTP_409_CONFLICT
+                ),
+            )
+        return Response(attempt_answer_payload(answer))
+
+
+class LessonAttemptFinishView(APIView):
+    permission_classes = (IsStudentRole,)
+
+    @extend_schema(request=None, responses=LessonAttemptSerializer)
+    def post(self, request, attempt_id):
+        get_object_or_404(authorized_attempts(request.user), id=attempt_id)
+        try:
+            attempt = finish_attempt(attempt_id=attempt_id, student=request.user)
+        except AttemptStateError as exc:
+            return Response(
+                {"code": exc.code, "detail": exc.detail},
+                status=(
+                    status.HTTP_404_NOT_FOUND
+                    if exc.code == "LESSON_NOT_AVAILABLE"
+                    else status.HTTP_409_CONFLICT
+                ),
+            )
+        return Response(attempt_payload(attempt))
 
 
 class AdminEnrollmentListCreateView(APIView):
@@ -316,85 +480,6 @@ class AdminEnrollmentDetailView(APIView):
         return Response(enrollment_payload(enrollment))
 
 
-class InvalidAnswer(Exception):
-    code = "INVALID_ANSWER"
-    detail = "Envie uma resposta válida."
-
-    def __init__(self, *, code: str | None = None, detail: str | None = None) -> None:
-        if code is not None:
-            self.code = code
-        if detail is not None:
-            self.detail = detail
-        super().__init__(self.detail)
-
-
-def grade_answer(question: Question, data: dict) -> dict:
-    """Compara a resposta enviada com o gabarito, conforme o tipo da questão."""
-    explanation = question.explanation
-
-    if question.type == Question.Type.MCQ:
-        selected = next(
-            (choice for choice in question.choices.all() if choice.id == data["choiceId"]),
-            None,
-        )
-        if selected is None:
-            raise InvalidAnswer(code="CHOICE_NOT_AVAILABLE", detail="Alternativa inválida.")
-        correct = next(choice for choice in question.choices.all() if choice.is_correct)
-        return {
-            "isCorrect": selected.is_correct,
-            "selectedChoiceId": selected.id,
-            "correctChoiceId": correct.id,
-            "explanation": explanation,
-        }
-
-    correct = str(question.answer_data.get("correct", "")).strip()
-    if not correct:
-        raise InvalidAnswer()
-
-    if question.type == Question.Type.ORDERING:
-        order = data.get("order")
-        if not isinstance(order, list) or not order:
-            raise InvalidAnswer(detail="Organize as palavras antes de confirmar.")
-        answer = " ".join(str(token).strip() for token in order if str(token).strip())
-        return {
-            "isCorrect": is_equivalent(answer, correct),
-            "correctAnswer": correct,
-            "explanation": explanation,
-        }
-
-    answer = data.get("answer")
-    if not isinstance(answer, str) or not answer.strip():
-        raise InvalidAnswer()
-
-    if question.type == Question.Type.LISTENING:
-        return {
-            "isCorrect": is_close(answer, correct),
-            "correctAnswer": correct,
-            "explanation": explanation,
-        }
-
-    accepted = question.answer_data.get("accepted") or [correct]
-    is_correct = any(is_equivalent(candidate, answer) for candidate in accepted)
-    return {"isCorrect": is_correct, "correctAnswer": correct, "explanation": explanation}
-
-
-def error_category(question: Question, data: dict) -> str:
-    if question.type == Question.Type.LISTENING:
-        return "LISTENING"
-    if question.type == Question.Type.ORDERING:
-        return "WORD_ORDER"
-    if question.type == Question.Type.FILL_IN:
-        answer = data.get("answer")
-        correct = str(question.answer_data.get("correct", ""))
-        if isinstance(answer, str) and correct and similarity(answer, correct) >= 0.9:
-            return "SPELLING"
-    if question.lesson.skill == "Vocabulary":
-        return "VOCABULARY"
-    if question.lesson.skill in {"Conversation", "Speaking", "Review"}:
-        return "COMPREHENSION"
-    return "GRAMMAR"
-
-
 class DemoAnswerView(APIView):
     permission_classes = (AllowAny,)
 
@@ -433,42 +518,6 @@ class DemoAnswerView(APIView):
         if not feedback["isCorrect"]:
             feedback["errorCategory"] = error_category(question, data)
 
-        return Response(feedback)
-
-
-class AuthorizedAnswerView(APIView):
-    permission_classes = (IsStudentRole,)
-
-    @extend_schema(request=AnswerRequestSerializer, responses=AnswerFeedbackSerializer)
-    def post(self, request, slug: str):
-        question_id = request.data.get("questionId")
-        if not question_id:
-            return Response(
-                {"code": "INVALID_ANSWER", "detail": "Resposta incompleta."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        question = get_object_or_404(
-            Question.objects.prefetch_related("choices").filter(
-                id=question_id,
-                lesson__slug=slug,
-                lesson__status=Lesson.Status.PUBLISHED,
-                lesson__unit__course__in=enrolled_courses(request.user),
-            )
-        )
-        data = {
-            "choiceId": request.data.get("choiceId"),
-            "answer": request.data.get("answer"),
-            "order": request.data.get("order"),
-        }
-        try:
-            feedback = grade_answer(question, data)
-        except InvalidAnswer as exc:
-            return Response(
-                {"code": exc.code, "detail": exc.detail},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not feedback["isCorrect"]:
-            feedback["errorCategory"] = error_category(question, data)
         return Response(feedback)
 
 

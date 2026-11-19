@@ -6,11 +6,15 @@ import { useEffect, useMemo, useState } from "react";
 import { completeLesson, readProgress, recordLearningError } from "@/lib/demo-progress";
 import {
   checkAnswer,
+  finishLessonAttempt,
   getLesson,
+  startLessonAttempt,
+  submitAttemptAnswer,
   type AnswerFeedback,
   type AnswerPayload,
   type LearningAccess,
   type LessonDetail,
+  type LessonAttempt,
 } from "@/lib/learning";
 
 type Stage = "prepare" | "theory" | "quiz" | "production" | "result";
@@ -31,12 +35,52 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
   const [audioMessage, setAudioMessage] = useState("");
   const [productionDraft, setProductionDraft] = useState("");
   const [confidence, setConfidence] = useState<Confidence | null>(null);
+  const [attempt, setAttempt] = useState<LessonAttempt | null>(null);
+  const [finalResult, setFinalResult] = useState<LessonAttempt | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    getLesson(slug, controller.signal, access).then((loadedLesson) => {
+    const attemptPromise = access === "account" ? startLessonAttempt(slug) : Promise.resolve(null);
+    Promise.all([getLesson(slug, controller.signal, access), attemptPromise]).then(([loadedLesson, loadedAttempt]) => {
       setLesson(loadedLesson);
-      setStage(loadedLesson.pedagogy ? "prepare" : "theory");
+      if (!loadedAttempt) {
+        setStage(loadedLesson.pedagogy ? "prepare" : "theory");
+        return;
+      }
+      setAttempt(loadedAttempt);
+      setCorrectCount(loadedAttempt.correctCount);
+      if (loadedAttempt.status === "SUBMITTED") {
+        setFinalResult(loadedAttempt);
+        setXpEarned(loadedAttempt.xpAwarded);
+        setStage("result");
+        return;
+      }
+      const answeredIds = new Set(loadedAttempt.answers.map((answer) => answer.questionId));
+      const nextIndex = loadedLesson.questions.findIndex((question) => !answeredIds.has(question.id));
+      if (nextIndex >= 0) {
+        setQuestionIndex(nextIndex);
+        setStage(loadedAttempt.answers.length ? "quiz" : loadedLesson.pedagogy ? "prepare" : "theory");
+        return;
+      }
+      const lastIndex = Math.max(0, loadedLesson.questions.length - 1);
+      const lastQuestion = loadedLesson.questions[lastIndex];
+      const lastAnswer = loadedAttempt.answers.find((answer) => answer.questionId === lastQuestion?.id);
+      setQuestionIndex(lastIndex);
+      if (lastAnswer) {
+        setFeedback(lastAnswer);
+        setSelectedChoice(lastAnswer.choiceId ?? lastAnswer.selectedChoiceId ?? null);
+        setTextAnswer(lastAnswer.answer ?? "");
+        if (lastAnswer.order && lastQuestion?.tokens) {
+          const available = lastQuestion.tokens.map((token, index) => ({ token, index, used: false }));
+          setSelectedTokenIndexes(lastAnswer.order.flatMap((token) => {
+            const match = available.find((item) => !item.used && item.token === token);
+            if (!match) return [];
+            match.used = true;
+            return [match.index];
+          }));
+        }
+      }
+      setStage("quiz");
     }).catch((reason: unknown) => {
       if (!controller.signal.aborted) {
         setError(reason instanceof Error ? reason.message : "Erro inesperado.");
@@ -50,10 +94,11 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
 
   const currentQuestion = lesson?.questions[questionIndex];
   const score = useMemo(
-    () => lesson ? Math.round((correctCount / lesson.questions.length) * 100) : 0,
-    [correctCount, lesson],
+    () => finalResult?.scorePercent
+      ?? (lesson ? Math.round((correctCount / lesson.questions.length) * 100) : 0),
+    [correctCount, finalResult, lesson],
   );
-  const passed = Boolean(lesson && score >= lesson.passingPercent);
+  const passed = finalResult?.passed ?? Boolean(lesson && score >= lesson.passingPercent);
   const orderedTokens = currentQuestion?.tokens ?? [];
   const stages: Stage[] = lesson?.pedagogy
     ? ["prepare", "theory", "quiz", "production", "result"]
@@ -110,7 +155,12 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
     setChecking(true);
     setError("");
     try {
-      const result = await checkAnswer(lesson.slug, currentQuestion.id, answerPayload(), access);
+      const result = access === "demo"
+        ? await checkAnswer(lesson.slug, currentQuestion.id, answerPayload(), access)
+        : attempt
+          ? await submitAttemptAnswer(attempt.id, currentQuestion.id, answerPayload())
+          : null;
+      if (!result) throw new Error("A tentativa ainda não está pronta.");
       setFeedback(result);
       if (result.isCorrect) setCorrectCount((count) => count + 1);
       else if (access === "demo" && result.errorCategory) {
@@ -123,15 +173,33 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
     }
   }
 
-  function finishLesson() {
-    if (!lesson) return;
+  async function finishLesson() {
+    if (!lesson || checking) return;
     if (passed && access === "demo") {
       const isReview = Boolean(readProgress().completed[lesson.slug]);
       const awarded = isReview ? 0 : lesson.xpReward;
       completeLesson(lesson.slug, score, awarded);
       setXpEarned(awarded);
     }
-    setStage("result");
+    if (access === "demo") {
+      setStage("result");
+      return;
+    }
+    if (!attempt) return;
+    setChecking(true);
+    setError("");
+    try {
+      const result = await finishLessonAttempt(attempt.id);
+      setAttempt(result);
+      setFinalResult(result);
+      setCorrectCount(result.correctCount);
+      setXpEarned(result.xpAwarded);
+      setStage("result");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Erro ao finalizar a missão.");
+    } finally {
+      setChecking(false);
+    }
   }
 
   function nextQuestion() {
@@ -145,14 +213,28 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
       setStage("production");
       return;
     }
-    finishLesson();
+    void finishLesson();
   }
 
-  function restart() {
+  async function restart() {
+    if (access === "account") {
+      setChecking(true);
+      setError("");
+      try {
+        const nextAttempt = await startLessonAttempt(slug);
+        setAttempt(nextAttempt);
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "Erro ao iniciar nova tentativa.");
+        setChecking(false);
+        return;
+      }
+      setChecking(false);
+    }
     setStage("quiz");
     setQuestionIndex(0);
     setCorrectCount(0);
     setXpEarned(0);
+    setFinalResult(null);
     resetAnswer();
   }
 
@@ -168,7 +250,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
         <div className="lesson-stepper" style={{ gridTemplateColumns: `repeat(${stages.length}, 1fr)` }} aria-label={`Etapa ${stageIndex + 1} de ${stages.length}`}>
           {stages.map((item, index) => <i className={index <= stageIndex ? "is-active" : ""} key={item} />)}
         </div>
-        <span>{access === "demo" ? `+${lesson.xpReward} XP` : "Prática sem registro"}</span>
+        <span>{access === "demo" ? `+${lesson.xpReward} XP` : "Progresso sincronizado"}</span>
       </div>
 
       {stage === "prepare" && lesson.pedagogy ? (
@@ -221,7 +303,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
             <label><input type="radio" name="confidence" checked={confidence === "supported"} onChange={() => setConfidence("supported")} /> Consegui com apoio</label>
             <label><input type="radio" name="confidence" checked={confidence === "independent"} onChange={() => setConfidence("independent")} /> Consegui sozinho</label>
           </fieldset>
-          <footer><button className="lesson-secondary-button" type="button" onClick={() => setStage("theory")}>Rever conteúdo</button><button className="student-primary-button" type="button" disabled={!confidence || (lesson.pedagogy.productionTask.mode === "WRITING" && !productionDraft.trim())} onClick={finishLesson}>Concluir missão →</button></footer>
+          <footer><button className="lesson-secondary-button" type="button" onClick={() => setStage("theory")}>Rever conteúdo</button><button className="student-primary-button" type="button" disabled={checking || !confidence || (lesson.pedagogy.productionTask.mode === "WRITING" && !productionDraft.trim())} onClick={() => void finishLesson()}>{checking ? "Salvando…" : "Concluir missão →"}</button></footer>
         </article>
       ) : null}
 
@@ -271,10 +353,10 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "ac
 
       {stage === "result" ? (
         <article className={`result-card${passed ? " is-passed" : ""}`}>
-          <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a prática!" : "A prática faz parte da jornada."}</h1><p>{passed ? access === "account" ? `Você acertou ${correctCount} de ${lesson.questions.length}. Tentativas e XP serão associados à conta na próxima etapa do desenvolvimento.` : xpEarned > 0 ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP.` : `Você acertou ${correctCount} de ${lesson.questions.length}. Revisão concluída sem XP adicional.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
-          <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>{access === "demo" ? `+${xpEarned}` : "—"}</strong><span>XP</span></div></div>
+          <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a prática!" : "A prática faz parte da jornada."}</h1><p>{passed ? xpEarned > 0 ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP.` : `Você acertou ${correctCount} de ${lesson.questions.length}. Revisão concluída sem XP adicional.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
+          <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>+{xpEarned}</strong><span>XP</span></div></div>
           {passed && lesson.pedagogy ? <section className="review-prompts"><h2>Retome depois, sem consultar</h2><p>Use estas perguntas amanhã e novamente em alguns dias.</p><ul>{lesson.pedagogy.reviewPrompts.map((prompt) => <li key={prompt}>{prompt}</li>)}</ul></section> : null}
-          <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" onClick={restart}>Tentar novamente</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href={basePath}>Voltar ao painel →</Link></div>
+          <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" disabled={checking} onClick={() => void restart()}>{checking ? "Preparando…" : "Tentar novamente"}</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href={basePath}>Voltar ao painel →</Link></div>
         </article>
       ) : null}
     </div>

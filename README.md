@@ -20,12 +20,13 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - identidade por convite para alunos e professores, login por sessão, logout e recuperação de senha;
 - áreas protegidas por papel para aluno, professor e administração;
 - matrícula persistida com gestão administrativa e currículo autenticado isolado por aluno;
+- tentativas retomáveis, respostas confirmadas, progresso e melhor resultado persistidos;
+- ledger de XP idempotente, com crédito único na primeira aprovação da missão;
 - configurações separadas para desenvolvimento, testes e produção;
 - testes, lint, typecheck, build e CI;
 - frontend, backend e PostgreSQL publicados no Railway com deploy automático pela `main`.
 
-Tentativas, progresso e XP associados à conta, pagamentos e videoconferência entre duas contas
-**ainda não estão implementados**. O laboratório usa somente os dispositivos locais e
+Pagamentos e videoconferência entre duas contas **ainda não estão implementados**. O laboratório usa somente os dispositivos locais e
 informa quando não existe um professor conectado; o modo público não simula esses recursos.
 
 Produção: <https://frontend-production-a0b865d3.up.railway.app/><br>

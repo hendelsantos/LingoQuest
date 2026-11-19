@@ -141,21 +141,15 @@ def test_active_student_reads_only_enrolled_published_course_without_answers(
 
 
 @pytest.mark.django_db
-def test_answer_correction_requires_enrollment(published_course, users):
+def test_attempt_start_requires_enrollment(published_course, users):
     Enrollment.objects.create(student=users["student"], course=published_course)
-    question = published_course.units.first().lessons.first().questions.first()
-    choice = question.choices.first()
-    payload = {"questionId": question.id, "choiceId": choice.id}
+    lesson = published_course.units.first().lessons.first()
 
     allowed = authenticated_client(users["student"]).post(
-        reverse("authorized-answer", kwargs={"slug": question.lesson.slug}),
-        payload,
-        format="json",
+        reverse("lesson-attempt-start", kwargs={"slug": lesson.slug}),
     )
     denied = authenticated_client(users["other"]).post(
-        reverse("authorized-answer", kwargs={"slug": question.lesson.slug}),
-        payload,
-        format="json",
+        reverse("lesson-attempt-start", kwargs={"slug": lesson.slug}),
     )
 
     assert allowed.status_code == 200

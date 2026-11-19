@@ -21,9 +21,13 @@ Disponível:
 | GET, POST | `/api/v1/admin/enrollments/` | administrador (+ CSRF em POST) | lista ou cria matrícula em curso publicado |
 | PATCH | `/api/v1/admin/enrollments/{id}/` | administrador + CSRF | pausa, reativa, conclui ou cancela matrícula |
 | GET | `/api/v1/me/enrollments/` | aluno autenticado | lista somente as próprias matrículas |
+| GET | `/api/v1/me/dashboard/` | aluno autenticado | XP confirmado e progresso nas trilhas autorizadas |
 | GET | `/api/v1/courses/{slug}/outline/` | aluno matriculado | currículo publicado autorizado pela matrícula |
 | GET | `/api/v1/lessons/{slug}/` | aluno matriculado | conteúdo publicado sem gabarito |
-| POST | `/api/v1/lessons/{slug}/answer/` | aluno matriculado + CSRF | correção stateless da prática autorizada |
+| POST | `/api/v1/lessons/{slug}/attempts/` | aluno matriculado + CSRF | inicia ou recupera a tentativa em andamento |
+| GET | `/api/v1/attempts/{id}/` | dono da tentativa | recupera estado e feedback apenas das respostas confirmadas |
+| POST | `/api/v1/attempts/{id}/answers/` | dono da tentativa + CSRF | confirma uma resposta imutável e devolve feedback |
+| POST | `/api/v1/attempts/{id}/finish/` | dono da tentativa + CSRF | finaliza de forma idempotente e consolida score, progresso e XP |
 | GET | `/api/v1/demo/courses/a1-foundations/outline/` | pública | trilha demonstrativa publicada |
 | GET | `/api/v1/demo/lessons/{slug}/` | pública | teoria, exemplo e questões sem gabarito |
 | POST | `/api/v1/demo/lessons/{slug}/answer/` | pública | corrige uma escolha e devolve feedback |
@@ -32,8 +36,8 @@ Disponível:
 
 O namespace `/demo/` é deliberadamente separado dos endpoints autenticados. Ele serve à
 avaliação pública do produto; o progresso desse modo fica no navegador e nunca é apresentado como
-histórico da conta. Na Fase 2A, o modo autenticado oferece currículo e correção sem persistir
-tentativas, XP ou progresso; essa persistência pertence à Fase 2B. O backend nunca inclui
+histórico da conta. No modo autenticado, tentativas, respostas, progresso e XP são persistidos no
+backend e podem ser retomados em outro dispositivo. O backend nunca inclui
 `is_correct`, explicação ou alternativa correta no payload inicial da lição.
 
 As mutações de identidade exigem `X-CSRFToken`, inclusive login, convite e recuperação. O cliente

@@ -10,6 +10,8 @@ import re
 import unicodedata
 from difflib import SequenceMatcher
 
+from .models import Question
+
 LISTENING_SIMILARITY_THRESHOLD = 0.85
 
 _APOSTROPHES = {"’": "'", "‘": "'", "ʼ": "'", "`": "'"}
@@ -104,3 +106,82 @@ def is_close(
     if is_equivalent(candidate, target):
         return True
     return similarity(candidate, target) >= threshold
+
+
+class InvalidAnswer(Exception):
+    code = "INVALID_ANSWER"
+    detail = "Envie uma resposta válida."
+
+    def __init__(self, *, code: str | None = None, detail: str | None = None) -> None:
+        if code is not None:
+            self.code = code
+        if detail is not None:
+            self.detail = detail
+        super().__init__(self.detail)
+
+
+def grade_answer(question: Question, data: dict) -> dict:
+    """Compara a resposta enviada com o gabarito, conforme o tipo da questão."""
+    explanation = question.explanation
+
+    if question.type == Question.Type.MCQ:
+        selected = next(
+            (choice for choice in question.choices.all() if choice.id == data["choiceId"]),
+            None,
+        )
+        if selected is None:
+            raise InvalidAnswer(code="CHOICE_NOT_AVAILABLE", detail="Alternativa inválida.")
+        correct = next(choice for choice in question.choices.all() if choice.is_correct)
+        return {
+            "isCorrect": selected.is_correct,
+            "selectedChoiceId": selected.id,
+            "correctChoiceId": correct.id,
+            "explanation": explanation,
+        }
+
+    correct = str(question.answer_data.get("correct", "")).strip()
+    if not correct:
+        raise InvalidAnswer()
+
+    if question.type == Question.Type.ORDERING:
+        order = data.get("order")
+        if not isinstance(order, list) or not order:
+            raise InvalidAnswer(detail="Organize as palavras antes de confirmar.")
+        answer = " ".join(str(token).strip() for token in order if str(token).strip())
+        return {
+            "isCorrect": is_equivalent(answer, correct),
+            "correctAnswer": correct,
+            "explanation": explanation,
+        }
+
+    answer = data.get("answer")
+    if not isinstance(answer, str) or not answer.strip():
+        raise InvalidAnswer()
+
+    if question.type == Question.Type.LISTENING:
+        return {
+            "isCorrect": is_close(answer, correct),
+            "correctAnswer": correct,
+            "explanation": explanation,
+        }
+
+    accepted = question.answer_data.get("accepted") or [correct]
+    is_correct = any(is_equivalent(candidate, answer) for candidate in accepted)
+    return {"isCorrect": is_correct, "correctAnswer": correct, "explanation": explanation}
+
+
+def error_category(question: Question, data: dict) -> str:
+    if question.type == Question.Type.LISTENING:
+        return "LISTENING"
+    if question.type == Question.Type.ORDERING:
+        return "WORD_ORDER"
+    if question.type == Question.Type.FILL_IN:
+        answer = data.get("answer")
+        correct = str(question.answer_data.get("correct", ""))
+        if isinstance(answer, str) and correct and similarity(answer, correct) >= 0.9:
+            return "SPELLING"
+    if question.lesson.skill == "Vocabulary":
+        return "VOCABULARY"
+    if question.lesson.skill in {"Conversation", "Speaking", "Review"}:
+        return "COMPREHENSION"
+    return "GRAMMAR"

@@ -3,9 +3,9 @@
 Cada fase termina em um incremento demonstrável, testes e documentação. Uma fase não começa com
 pendências críticas de autorização, integridade ou build na anterior.
 
-## Prioridades atuais: Fase 2B e validação pedagógica
+## Prioridades atuais: Fase 3 e validação pedagógica
 
-A base técnica da Fase 2A está concluída e a Fase 2B pode persistir o ciclo de estudo. Em paralelo,
+A Fase 2B concluiu a persistência do ciclo de estudo e liberou o início da Fase 3. Em paralelo,
 a Missão 2.0 aplicada a todo o A1 ainda precisa de validação com alunos e professor antes de ser
 tratada como método comprovado. O incremento inclui objetivo observável, produção autoral,
 checkpoints cumulativos, avaliações paralelas, categorias de erro e recuperação em 1, 3, 7 e 21
@@ -16,7 +16,7 @@ dias. O plano e os critérios estão em [evolução pedagógica](pedagogical-evo
 | 0 — Fundação ✓ | API/DB/web executam, landing real, CI e arquitetura registradas | health, lint, testes e build verdes |
 | 1 — Identidade ✓ | admin convida; usuário aceita, entra e sai | CSRF, papéis e desativação testados |
 | 2A — Currículo ✓ | admin publica A1 Foundations e aluno matriculado vê trilha | seed idempotente, gabarito não vaza |
-| 2B — Missão | aluno responde, recarrega, conclui e recebe XP uma vez | concorrência e revisão testadas |
+| 2B — Missão ✓ | aluno responde, recarrega, conclui e recebe XP uma vez | concorrência e revisão testadas |
 | 3 — Ciclo humano | professor vê evidências, atribui tarefa e agenda aula externa | aluno alheio invisível; conflito de agenda |
 | 4 — Operação do piloto | caderno, entregas, presença e painel mínimo | piloto de seis semanas operável |
 | 5 — Financeiro manual | assinatura, competência, baixa e auditoria | valores decimais e isolamento testados |
@@ -48,11 +48,18 @@ matrículas em `/school/enrollments`; a API autenticada restringe cursos, liçõ
 com matrícula ativa ou concluída. Matrícula pausada ou cancelada bloqueia o currículo com 404. A
 interface da conta não lê o progresso local do preview nem simula XP.
 
-## Próxima entrega: Fase 2B
+## Entrega concluída: Fase 2B
 
-Persistir tentativas, respostas confirmadas, progresso e ledger de XP. A finalização deve ser
-idempotente, emitir XP uma única vez na primeira aprovação e conservar o melhor resultado em
-revisões. Recarregar ou trocar de dispositivo deve recuperar a tentativa em andamento.
+Tentativas, respostas confirmadas, progresso e o ledger de XP agora são persistidos. A finalização
+é idempotente, emite XP uma única vez na primeira aprovação e conserva o melhor resultado em
+revisões. Recarregar ou trocar de dispositivo recupera a tentativa em andamento e respeita as
+respostas já confirmadas.
+
+## Próxima entrega: Fase 3
+
+Criar o ciclo humano mínimo: vínculo professor-aluno, evidências de progresso autorizadas, tarefa
+escrita e agenda de aula externa com bloqueio de conflitos. O professor deve enxergar somente seus
+alunos, e nenhum vínculo informado pelo frontend pode servir como autorização.
 
 ## Disciplina de entrega
 

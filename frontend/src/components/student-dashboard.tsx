@@ -4,17 +4,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { getEnrollments, type Enrollment } from "@/lib/learning";
+import {
+  getEnrollments,
+  getStudentLearningSummary,
+  type Enrollment,
+  type StudentLearningSummary,
+} from "@/lib/learning";
 
 export function StudentDashboard() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [summary, setSummary] = useState<StudentLearningSummary | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    getEnrollments(controller.signal)
-      .then(setEnrollments)
+    Promise.all([
+      getEnrollments(controller.signal),
+      getStudentLearningSummary(controller.signal),
+    ])
+      .then(([loadedEnrollments, loadedSummary]) => {
+        setEnrollments(loadedEnrollments);
+        setSummary(loadedSummary);
+      })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           setError(reason instanceof Error ? reason.message : "Erro inesperado.");
@@ -38,7 +50,7 @@ export function StudentDashboard() {
         <div>
           <span className="student-kicker">Seu espaço de aprendizagem</span>
           <h1><span>Small steps.</span><br />Big adventures.</h1>
-          <p>Sua conta agora mostra somente os cursos liberados pela escola. Tentativas, progresso e XP serão persistidos na próxima etapa.</p>
+          <p>Sua conta mostra somente os cursos liberados pela escola e sincroniza tentativas, progresso e XP entre dispositivos.</p>
           {accessible.length ? <Link className="student-primary-button" href={`/app/learn?course=${encodeURIComponent(accessible[0].course.slug)}`}>Abrir minha trilha →</Link> : null}
         </div>
         <Image src="/characters/finn-welcome.svg" alt="Finn, o guia da sua jornada" width={360} height={330} priority />
@@ -47,8 +59,8 @@ export function StudentDashboard() {
       <section className="student-stat-grid" aria-label="Suas matrículas">
         <article><span className="stat-icon is-green">◇</span><div><strong>{active}</strong><small>Matrículas ativas</small></div></article>
         <article><span className="stat-icon is-lavender">✓</span><div><strong>{completed}</strong><small>Cursos concluídos</small></div></article>
-        <article><span className="stat-icon is-warm">⚡</span><div><strong>—</strong><small>XP na Fase 2B</small></div></article>
-        <article><span className="stat-icon is-green">◎</span><div><strong>—</strong><small>Progresso na Fase 2B</small></div></article>
+        <article><span className="stat-icon is-warm">⚡</span><div><strong>{summary?.xp ?? 0}</strong><small>XP confirmado</small></div></article>
+        <article><span className="stat-icon is-green">◎</span><div><strong>{summary?.progressPercent ?? 0}%</strong><small>{summary?.completedLessons ?? 0} de {summary?.totalLessons ?? 0} missões</small></div></article>
       </section>
 
       <div className="student-section-heading">

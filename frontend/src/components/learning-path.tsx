@@ -99,6 +99,10 @@ export function LearningPath({ basePath = "/app", access = "account" }: { basePa
     [lessons, progress],
   );
   const stats = progressStats(courseProgress, outline?.lessonCount ?? 0);
+  const accountCompletedCount = lessons.filter((lesson) => lesson.completed).length;
+  const accountPercent = outline?.lessonCount
+    ? Math.round((accountCompletedCount / outline.lessonCount) * 100)
+    : 0;
 
   return (
     <div className="learn-page">
@@ -123,8 +127,8 @@ export function LearningPath({ basePath = "/app", access = "account" }: { basePa
           <p>{outline?.description ?? "Escolha um nível e avance missão por missão."}</p>
         </div>
         <div className="learn-progress-summary">
-          <strong>{access === "demo" ? `${stats.percent}%` : "—"}</strong>
-          <span>{access === "demo" ? `${stats.completedCount} de ${outline?.lessonCount ?? 0} missões` : "Progresso persistido na Fase 2B"}</span>
+          <strong>{access === "demo" ? `${stats.percent}%` : `${accountPercent}%`}</strong>
+          <span>{access === "demo" ? stats.completedCount : accountCompletedCount} de {outline?.lessonCount ?? 0} missões</span>
         </div>
       </header>
 
@@ -141,12 +145,14 @@ export function LearningPath({ basePath = "/app", access = "account" }: { basePa
             </div>
             <div className="lesson-card-grid">
               {unit.lessons.map((lesson) => {
-                const completed = access === "demo" ? courseProgress.completed[lesson.slug] : undefined;
+                const demoCompletion = access === "demo" ? courseProgress.completed[lesson.slug] : undefined;
+                const completed = Boolean(demoCompletion || lesson.completed);
+                const bestScore = demoCompletion?.score ?? lesson.bestScore;
                 return (
                   <article className={`lesson-card${completed ? " is-completed" : ""}`} key={lesson.slug}>
-                    <div className="lesson-card-meta"><span>{lesson.skill}</span><small>{lesson.estimatedMinutes} min · {access === "demo" ? `+${lesson.xpReward} XP` : "prática sem registro"}</small></div>
+                    <div className="lesson-card-meta"><span>{lesson.skill}</span><small>{lesson.estimatedMinutes} min · {access === "demo" ? `+${lesson.xpReward} XP` : "progresso sincronizado"}</small></div>
                     <h3>{lesson.title}</h3><p>{lesson.summary}</p>
-                    <div className="lesson-card-footer"><span>{completed ? `✓ Concluída · ${completed.score}%` : access === "demo" ? "Pronta para começar" : "Disponível para estudo"}</span><Link href={`${basePath}/learn/${lesson.slug}?course=${encodeURIComponent(selectedSlug)}`}>{completed ? "Revisar" : access === "demo" ? "Começar" : "Abrir"} →</Link></div>
+                    <div className="lesson-card-footer"><span>{completed ? `✓ Concluída · ${bestScore}%` : lesson.inProgress ? "Tentativa em andamento" : "Pronta para começar"}</span><Link href={`${basePath}/learn/${lesson.slug}?course=${encodeURIComponent(selectedSlug)}`}>{completed ? "Revisar" : lesson.inProgress ? "Continuar" : "Começar"} →</Link></div>
                   </article>
                 );
               })}

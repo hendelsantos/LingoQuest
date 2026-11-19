@@ -13,6 +13,9 @@ class LessonSummarySerializer(serializers.Serializer):
     estimatedMinutes = serializers.IntegerField()
     xpReward = serializers.IntegerField()
     position = serializers.IntegerField()
+    completed = serializers.BooleanField(required=False)
+    bestScore = serializers.IntegerField(required=False)
+    inProgress = serializers.BooleanField(required=False)
 
 
 class CourseUnitSerializer(serializers.Serializer):
@@ -113,6 +116,38 @@ class AnswerFeedbackSerializer(serializers.Serializer):
         ),
         required=False,
     )
+
+
+class AttemptAnswerSerializer(AnswerFeedbackSerializer):
+    questionId = serializers.IntegerField()
+    choiceId = serializers.IntegerField(required=False)
+    answer = serializers.CharField(required=False, allow_blank=True)
+    order = serializers.ListField(child=serializers.CharField(), required=False)
+    answeredAt = serializers.DateTimeField()
+
+
+class LessonAttemptSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    lessonSlug = serializers.SlugField()
+    status = serializers.ChoiceField(
+        choices=("IN_PROGRESS", "SUBMITTED", "ABANDONED")
+    )
+    startedAt = serializers.DateTimeField()
+    submittedAt = serializers.DateTimeField(allow_null=True)
+    answeredCount = serializers.IntegerField()
+    correctCount = serializers.IntegerField()
+    totalQuestions = serializers.IntegerField()
+    scorePercent = serializers.IntegerField()
+    passed = serializers.BooleanField()
+    xpAwarded = serializers.IntegerField()
+    answers = AttemptAnswerSerializer(many=True)
+
+
+class StudentLearningSummarySerializer(serializers.Serializer):
+    xp = serializers.IntegerField()
+    completedLessons = serializers.IntegerField()
+    totalLessons = serializers.IntegerField()
+    progressPercent = serializers.IntegerField()
 
 
 class AssessmentQuestionSerializer(serializers.Serializer):

@@ -171,3 +171,121 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.student.email} · {self.course.title}"
+
+
+class LessonAttempt(models.Model):
+    class Status(models.TextChoices):
+        IN_PROGRESS = "IN_PROGRESS", "Em andamento"
+        SUBMITTED = "SUBMITTED", "Finalizada"
+        ABANDONED = "ABANDONED", "Abandonada"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="lesson_attempts",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.PROTECT,
+        related_name="attempts",
+    )
+    status = models.CharField(
+        max_length=12,
+        choices=Status.choices,
+        default=Status.IN_PROGRESS,
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    correct_count = models.PositiveSmallIntegerField(default=0)
+    total_questions = models.PositiveSmallIntegerField(default=0)
+    score_percent = models.PositiveSmallIntegerField(default=0)
+    passed = models.BooleanField(default=False)
+    xp_awarded = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("-started_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("student", "lesson"),
+                condition=models.Q(status="IN_PROGRESS"),
+                name="attempt_one_in_progress_per_lesson",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(score_percent__gte=0, score_percent__lte=100),
+                name="attempt_score_percent_range",
+            ),
+        ]
+        indexes = [models.Index(fields=("student", "status", "started_at"))]
+
+    def __str__(self):
+        return f"{self.student.email} · {self.lesson.title} · {self.status}"
+
+
+class AttemptAnswer(models.Model):
+    attempt = models.ForeignKey(
+        LessonAttempt,
+        on_delete=models.PROTECT,
+        related_name="answers",
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.PROTECT,
+        related_name="attempt_answers",
+    )
+    selected_choice = models.ForeignKey(
+        Choice,
+        on_delete=models.PROTECT,
+        related_name="attempt_answers",
+        null=True,
+        blank=True,
+    )
+    response_data = models.JSONField(default=dict)
+    feedback = models.JSONField(default=dict)
+    is_correct = models.BooleanField()
+    answered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("question__position",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("attempt", "question"),
+                name="attempt_answer_question_unique",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.attempt_id} · questão {self.question_id}"
+
+
+class LessonProgress(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="lesson_progress",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.PROTECT,
+        related_name="student_progress",
+    )
+    best_score = models.PositiveSmallIntegerField(default=0)
+    first_passed_at = models.DateTimeField(null=True, blank=True)
+    completed = models.BooleanField(default=False)
+    last_attempt_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("student", "lesson"),
+                name="lesson_progress_student_lesson_unique",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(best_score__gte=0, best_score__lte=100),
+                name="lesson_progress_best_score_range",
+            ),
+        ]
+        indexes = [models.Index(fields=("student", "completed", "last_attempt_at"))]
+
+    def __str__(self):
+        return f"{self.student.email} · {self.lesson.title} · {self.best_score}%"

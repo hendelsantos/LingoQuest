@@ -10,6 +10,9 @@ export type LessonSummary = {
   estimatedMinutes: number;
   xpReward: number;
   position: number;
+  completed?: boolean;
+  bestScore?: number;
+  inProgress?: boolean;
 };
 
 export type CourseUnit = {
@@ -110,6 +113,33 @@ export type AnswerPayload = {
   choiceId?: number;
   answer?: string;
   order?: string[];
+};
+
+export type AttemptAnswer = AnswerFeedback & AnswerPayload & {
+  questionId: number;
+  answeredAt: string;
+};
+
+export type LessonAttempt = {
+  id: string;
+  lessonSlug: string;
+  status: "IN_PROGRESS" | "SUBMITTED" | "ABANDONED";
+  startedAt: string;
+  submittedAt: string | null;
+  answeredCount: number;
+  correctCount: number;
+  totalQuestions: number;
+  scorePercent: number;
+  passed: boolean;
+  xpAwarded: number;
+  answers: AttemptAnswer[];
+};
+
+export type StudentLearningSummary = {
+  xp: number;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercent: number;
 };
 
 export type AssessmentMoment = "initial" | "final";
@@ -215,6 +245,57 @@ export async function checkAnswer(
     throw new Error("Não foi possível corrigir sua resposta.");
   }
   return response.json() as Promise<AnswerFeedback>;
+}
+
+async function postAccountJson<T>(url: string, body?: unknown): Promise<T> {
+  const csrfToken = await getCsrfToken();
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(payload?.detail ?? "Não foi possível salvar seu progresso.");
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function startLessonAttempt(slug: string): Promise<LessonAttempt> {
+  return postAccountJson(
+    `/api/v1/lessons/${encodeURIComponent(slug)}/attempts/`,
+  );
+}
+
+export async function submitAttemptAnswer(
+  attemptId: string,
+  questionId: number,
+  payload: AnswerPayload,
+): Promise<AttemptAnswer> {
+  return postAccountJson(
+    `/api/v1/attempts/${encodeURIComponent(attemptId)}/answers/`,
+    { questionId, ...payload },
+  );
+}
+
+export async function finishLessonAttempt(attemptId: string): Promise<LessonAttempt> {
+  return postAccountJson(
+    `/api/v1/attempts/${encodeURIComponent(attemptId)}/finish/`,
+  );
+}
+
+export async function getStudentLearningSummary(
+  signal?: AbortSignal,
+): Promise<StudentLearningSummary> {
+  return fetchJson(
+    "/api/v1/me/dashboard/",
+    "Não foi possível carregar seu progresso.",
+    { signal },
+  );
 }
 
 export async function getAssessment(

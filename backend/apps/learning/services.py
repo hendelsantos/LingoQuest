@@ -42,12 +42,65 @@ def _park_positions(queryset) -> None:
 
 def _delete_questions(lesson: Lesson) -> None:
     """Remove o gabarito respeitando os FKs protegidos do domínio."""
+    if lesson.attempts.exists():
+        raise ValueError(
+            "Uma lição com tentativas não pode ter suas perguntas recriadas. "
+            "Crie uma nova versão da lição."
+        )
     question_ids = list(lesson.questions.values_list("id", flat=True))
     if not question_ids:
         return
     # IDs materializados evitam que o PostgreSQL planeje um JOIN caro para cada lição.
     Choice.objects.filter(question_id__in=question_ids).delete()
     Question.objects.filter(id__in=question_ids).delete()
+
+
+def _answer_data(question_data: dict) -> dict:
+    question_type = question_data["type"]
+    if question_type == Question.Type.MCQ:
+        return {}
+    data = {"correct": question_data["correct"]}
+    if question_data.get("accepted"):
+        data["accepted"] = question_data["accepted"]
+    if question_type == Question.Type.ORDERING:
+        data["tokens"] = _scramble_tokens(question_data["correct"])
+    return data
+
+
+def _questions_match(lesson: Lesson, questions_data: list[dict]) -> bool:
+    existing = list(lesson.questions.prefetch_related("choices").all())
+    if len(existing) != len(questions_data):
+        return False
+    for position, (question, desired) in enumerate(
+        zip(existing, questions_data, strict=True),
+        start=1,
+    ):
+        if (
+            question.position != position
+            or question.type != desired["type"]
+            or question.prompt != desired["prompt"]
+            or question.explanation != desired["explanation"]
+            or question.weight != desired.get("weight", 1)
+            or question.answer_data != _answer_data(desired)
+        ):
+            return False
+        if question.type == Question.Type.MCQ:
+            choices = list(question.choices.all())
+            desired_choices = desired["choices"]
+            if len(choices) != len(desired_choices):
+                return False
+            for choice_position, (choice, text) in enumerate(
+                zip(choices, desired_choices, strict=True),
+                start=1,
+            ):
+                if (
+                    choice.position != choice_position
+                    or choice.text != text
+                    or choice.is_correct
+                    != (choice_position - 1 == desired["correct_index"])
+                ):
+                    return False
+    return True
 
 
 def _sync_lesson(unit: Unit, lesson_data: dict, position: int) -> None:
@@ -71,7 +124,17 @@ def _sync_lesson(unit: Unit, lesson_data: dict, position: int) -> None:
     lesson.status = Lesson.Status.PUBLISHED
     lesson.save()
 
-    # Perguntas não têm identidade estável: recria a cada sincronização.
+    # Depois da primeira tentativa, o gabarito histórico fica imutável. Uma
+    # sincronização idêntica continua idempotente sem trocar os IDs das questões.
+    if lesson.attempts.exists():
+        if not _questions_match(lesson, lesson_data["questions"]):
+            raise ValueError(
+                "Uma lição com tentativas não pode ter suas perguntas alteradas. "
+                "Crie uma nova versão da lição."
+            )
+        return
+
+    # Perguntas ainda sem histórico não têm identidade estável: recria a cada sincronização.
     _delete_questions(lesson)
     for question_position, question_data in enumerate(lesson_data["questions"], start=1):
         _create_question(lesson, question_data, question_position)
@@ -79,14 +142,6 @@ def _sync_lesson(unit: Unit, lesson_data: dict, position: int) -> None:
 
 def _create_question(lesson: Lesson, question_data: dict, position: int) -> None:
     question_type = question_data["type"]
-    answer_data: dict = {}
-
-    if question_type != Question.Type.MCQ:
-        answer_data["correct"] = question_data["correct"]
-        if question_data.get("accepted"):
-            answer_data["accepted"] = question_data["accepted"]
-        if question_type == Question.Type.ORDERING:
-            answer_data["tokens"] = _scramble_tokens(question_data["correct"])
 
     question = Question.objects.create(
         lesson=lesson,
@@ -95,7 +150,7 @@ def _create_question(lesson: Lesson, question_data: dict, position: int) -> None
         position=position,
         explanation=question_data["explanation"],
         weight=question_data.get("weight", 1),
-        answer_data=answer_data,
+        answer_data=_answer_data(question_data),
     )
 
     if question_type == Question.Type.MCQ:
