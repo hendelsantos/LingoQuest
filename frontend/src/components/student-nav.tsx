@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 
 export function StudentNav({ basePath = "/app" }: { basePath?: string }) {
   const pathname = usePathname();
+  const isDemo = basePath === "/demo";
   const navigation = [
     { href: basePath, label: "Visão geral", icon: "⌂" },
     { href: `${basePath}/learn`, label: "Trilha de inglês", icon: "◇" },
+    { href: `${basePath}/review`, label: "Revisões", icon: "↻", disabled: !isDemo },
     { href: `${basePath}/notebook`, label: "Meu caderno", icon: "▤", disabled: true },
     { href: `${basePath}/live`, label: "Aulas ao vivo", icon: "◉" },
     { href: `${basePath}/achievements`, label: "Conquistas", icon: "✦", disabled: true },

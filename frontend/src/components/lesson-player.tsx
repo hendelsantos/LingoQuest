@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { completeLesson, readProgress } from "@/lib/demo-progress";
+import { completeLesson, readProgress, recordLearningError } from "@/lib/demo-progress";
 import {
   checkAnswer,
   getLesson,
   type AnswerFeedback,
   type AnswerPayload,
+  type LearningAccess,
   type LessonDetail,
 } from "@/lib/learning";
 
 type Stage = "prepare" | "theory" | "quiz" | "production" | "result";
 type Confidence = "practice" | "supported" | "independent";
 
-export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: string; courseSlug?: string; basePath?: string }) {
+export function LessonPlayer({ slug, courseSlug, basePath = "/app", access = "account" }: { slug: string; courseSlug?: string; basePath?: string; access?: LearningAccess }) {
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [stage, setStage] = useState<Stage>("theory");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -33,7 +34,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
 
   useEffect(() => {
     const controller = new AbortController();
-    getLesson(slug, controller.signal).then((loadedLesson) => {
+    getLesson(slug, controller.signal, access).then((loadedLesson) => {
       setLesson(loadedLesson);
       setStage(loadedLesson.pedagogy ? "prepare" : "theory");
     }).catch((reason: unknown) => {
@@ -45,7 +46,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
       controller.abort();
       window.speechSynthesis?.cancel();
     };
-  }, [slug]);
+  }, [access, slug]);
 
   const currentQuestion = lesson?.questions[questionIndex];
   const score = useMemo(
@@ -109,9 +110,12 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
     setChecking(true);
     setError("");
     try {
-      const result = await checkAnswer(lesson.slug, currentQuestion.id, answerPayload());
+      const result = await checkAnswer(lesson.slug, currentQuestion.id, answerPayload(), access);
       setFeedback(result);
       if (result.isCorrect) setCorrectCount((count) => count + 1);
+      else if (access === "demo" && result.errorCategory) {
+        recordLearningError(lesson.slug, result.errorCategory);
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Erro ao corrigir.");
     } finally {
@@ -121,9 +125,9 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
 
   function finishLesson() {
     if (!lesson) return;
-    if (passed) {
+    if (passed && access === "demo") {
       const isReview = Boolean(readProgress().completed[lesson.slug]);
-      const awarded = isReview ? 15 : lesson.xpReward;
+      const awarded = isReview ? 0 : lesson.xpReward;
       completeLesson(lesson.slug, score, awarded);
       setXpEarned(awarded);
     }
@@ -164,7 +168,7 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
         <div className="lesson-stepper" style={{ gridTemplateColumns: `repeat(${stages.length}, 1fr)` }} aria-label={`Etapa ${stageIndex + 1} de ${stages.length}`}>
           {stages.map((item, index) => <i className={index <= stageIndex ? "is-active" : ""} key={item} />)}
         </div>
-        <span>+{lesson.xpReward} XP</span>
+        <span>{access === "demo" ? `+${lesson.xpReward} XP` : "Prática sem registro"}</span>
       </div>
 
       {stage === "prepare" && lesson.pedagogy ? (
@@ -267,8 +271,8 @@ export function LessonPlayer({ slug, courseSlug, basePath = "/app" }: { slug: st
 
       {stage === "result" ? (
         <article className={`result-card${passed ? " is-passed" : ""}`}>
-          <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a missão!" : "A prática faz parte da jornada."}</h1><p>{passed ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP${xpEarned === 15 ? " pela revisão" : ""}.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
-          <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>+{xpEarned}</strong><span>XP</span></div></div>
+          <span className="result-symbol">{passed ? "✓" : "↻"}</span><p className="student-kicker">{passed ? "Mission complete" : "Vamos tentar mais uma vez"}</p><h1>{passed ? "Você concluiu a prática!" : "A prática faz parte da jornada."}</h1><p>{passed ? access === "account" ? `Você acertou ${correctCount} de ${lesson.questions.length}. Tentativas e XP serão associados à conta na próxima etapa do desenvolvimento.` : xpEarned > 0 ? `Você acertou ${correctCount} de ${lesson.questions.length} e conquistou ${xpEarned} XP.` : `Você acertou ${correctCount} de ${lesson.questions.length}. Revisão concluída sem XP adicional.` : `Você acertou ${correctCount} de ${lesson.questions.length}. É preciso atingir ${lesson.passingPercent}% para concluir.`}</p>
+          <div className="result-score"><div><strong>{score}%</strong><span>Seu resultado</span></div><div><strong>{correctCount}/{lesson.questions.length}</strong><span>Respostas corretas</span></div><div><strong>{access === "demo" ? `+${xpEarned}` : "—"}</strong><span>XP</span></div></div>
           {passed && lesson.pedagogy ? <section className="review-prompts"><h2>Retome depois, sem consultar</h2><p>Use estas perguntas amanhã e novamente em alguns dias.</p><ul>{lesson.pedagogy.reviewPrompts.map((prompt) => <li key={prompt}>{prompt}</li>)}</ul></section> : null}
           <div className="result-actions">{!passed ? <button className="lesson-secondary-button" type="button" onClick={restart}>Tentar novamente</button> : <Link className="lesson-secondary-button" href={pathHref}>Ver trilha</Link>}<Link className="student-primary-button" href={basePath}>Voltar ao painel →</Link></div>
         </article>

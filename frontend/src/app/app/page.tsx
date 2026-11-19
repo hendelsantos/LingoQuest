@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { DashboardDemo } from "@/components/dashboard-demo";
+import { StudentDashboard } from "@/components/student-dashboard";
 
 export const metadata: Metadata = { title: "Seu espaço" };
 
 export default function StudentDashboardPage() {
-  return <DashboardDemo />;
+  return <StudentDashboard />;
 }

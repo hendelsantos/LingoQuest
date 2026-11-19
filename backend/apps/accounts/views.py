@@ -81,6 +81,20 @@ class MeView(APIView):
         return Response(UserSerializer(request.user).data)
 
 
+class AdminUserListView(APIView):
+    permission_classes = (IsAdminRole,)
+
+    @extend_schema(responses=UserSerializer(many=True))
+    def get(self, request):
+        users = User.objects.order_by("name", "email")
+        role = request.query_params.get("role")
+        if role in User.Role.values:
+            users = users.filter(role=role)
+        if request.query_params.get("active") == "true":
+            users = users.filter(is_active=True)
+        return Response(UserSerializer(users, many=True).data)
+
+
 @method_decorator(csrf_protect, name="dispatch")
 class InvitationCreateView(APIView):
     permission_classes = (IsAdminRole,)

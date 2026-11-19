@@ -851,3 +851,8 @@ UNITS = [
         ],
     },
 ]
+
+
+from .advanced_extension import add_c2_conversations  # noqa: E402
+
+add_c2_conversations(UNITS)

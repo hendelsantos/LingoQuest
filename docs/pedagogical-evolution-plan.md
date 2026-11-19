@@ -15,17 +15,17 @@ professor são necessárias para evidenciar uso do idioma.
 
 ## Diagnóstico do currículo atual
 
-O catálogo possui 105 lições e 538 questões. Ele oferece amplitude, explicações em português,
+O catálogo possui 112 lições e 570 questões. Ele oferece amplitude, explicações em português,
 áudio, feedback e quatro formatos de exercício, mas ainda apresenta desequilíbrios:
 
 | Nível | Lições | Questões | Conversação | Revisão | Principal lacuna |
 |---|---:|---:|---:|---:|---|
-| A1 | 20 | 94 | 1 | 2 | pouca produção comunicativa guiada |
-| A2 | 21 | 107 | 5 | 1 | 14 lições classificadas como gramática |
-| B1 | 22 | 111 | 5 | 1 | 14 lições classificadas como gramática |
-| B2 | 18 | 96 | 4 | 0 | nenhuma missão de revisão |
+| A1 | 23 | 106 | 1 | 5 | validar produção e retenção com alunos |
+| A2 | 21 | 107 | 5 | 1 | validar 4 lições reorientadas para produção oral |
+| B1 | 22 | 111 | 5 | 1 | validar 5 lições reorientadas para fala/escrita |
+| B2 | 19 | 101 | 4 | 1 | validar integração das habilidades |
 | C1 | 14 | 78 | 2 | 1 | pouca integração oral |
-| C2 | 10 | 52 | 0 | 1 | nenhuma lição de conversação |
+| C2 | 13 | 67 | 3 | 1 | validar pragmática em situações reais |
 
 Todos os exercícios corrigidos automaticamente são fechados (`MCQ`, lacuna, ordenação ou ditado).
 Eles são úteis, mas não demonstram que o aluno consegue formular uma mensagem própria.
@@ -48,7 +48,7 @@ autoavaliação não substitui feedback de professor nem avaliação de profici�
 
 ## Sequência de implantação
 
-### P1 — Piloto Welcome A1
+### P1 — Piloto Welcome A1 — implementado
 
 Aplicar o ciclo completo às quatro primeiras missões: apresentação, `to be`, artigos e pronomes.
 Validar clareza, tempo, abandono entre etapas e qualidade das produções com cinco a dez alunos.
@@ -61,7 +61,7 @@ Critérios de saída:
 - aluno consegue retomar as perguntas de revisão no dia seguinte;
 - experiência funciona em 390 px e por teclado.
 
-### P2 — A1 comunicativo completo
+### P2 — A1 comunicativo completo — implementado
 
 - enriquecer as 16 missões restantes;
 - adicionar diálogos às situações de rotina, família, horários, alimentação e sobrevivência;
@@ -69,7 +69,7 @@ Critérios de saída:
 - criar avaliação inicial e final equivalentes com tarefas de fala e escrita;
 - revisar todo o conteúdo com um professor responsável e registrar aprovação editorial.
 
-### P3 — Revisão espaçada e categorias de erro
+### P3 — Revisão espaçada e categorias de erro — implementado no modo demonstrativo
 
 - agendar retomadas em 1, 3, 7 e 21 dias, ajustadas ao desempenho;
 - misturar itens antigos a novos em vez de repetir a lição inteira;
@@ -77,11 +77,11 @@ Critérios de saída:
 - mostrar ao professor padrões recorrentes e exemplos, sem inferir diagnóstico automático;
 - premiar retomada e domínio, não repetição mecânica de XP.
 
-### P4 — Reequilíbrio A2–C2
+### P4 — Reequilíbrio A2–C2 — primeira correção implementada
 
-- adicionar a revisão ausente em B2;
-- criar conversação e pragmática em C2;
-- reduzir a classificação centrada em gramática em A2/B1;
+- manter e validar a nova revisão integradora do B2;
+- validar as três novas missões de conversação e pragmática do C2;
+- revisar a nova classificação de habilidades comunicativas em A2/B1;
 - incluir produção oral, escrita funcional e tarefas integradas em todos os níveis;
 - mapear objetivos e avaliações ao CEFR sem chamar o curso de certificação oficial.
 

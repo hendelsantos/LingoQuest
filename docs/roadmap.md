@@ -3,19 +3,19 @@
 Cada fase termina em um incremento demonstrável, testes e documentação. Uma fase não começa com
 pendências críticas de autorização, integridade ou build na anterior.
 
-## Prioridade atual: qualidade pedagógica
+## Prioridades atuais: Fase 2B e validação pedagógica
 
-Antes de iniciar matrícula e progresso autenticado da Fase 2A, validar o piloto da Missão 2.0 nas
-quatro primeiras aulas A1. O incremento acrescenta objetivo observável, ativação, erros comuns,
-produção oral/escrita, autoavaliação e perguntas de recuperação. O plano e os critérios estão em
-[evolução pedagógica](pedagogical-evolution-plan.md). Depois da validação com alunos e professor, o
-padrão pode ser expandido ao A1 completo sem interromper o roadmap transacional abaixo.
+A base técnica da Fase 2A está concluída e a Fase 2B pode persistir o ciclo de estudo. Em paralelo,
+a Missão 2.0 aplicada a todo o A1 ainda precisa de validação com alunos e professor antes de ser
+tratada como método comprovado. O incremento inclui objetivo observável, produção autoral,
+checkpoints cumulativos, avaliações paralelas, categorias de erro e recuperação em 1, 3, 7 e 21
+dias. O plano e os critérios estão em [evolução pedagógica](pedagogical-evolution-plan.md).
 
 | Fase | Resultado demonstrável | Gate |
 |---|---|---|
 | 0 — Fundação ✓ | API/DB/web executam, landing real, CI e arquitetura registradas | health, lint, testes e build verdes |
 | 1 — Identidade ✓ | admin convida; usuário aceita, entra e sai | CSRF, papéis e desativação testados |
-| 2A — Currículo | admin publica A1 Foundations e aluno matriculado vê trilha | seed idempotente, gabarito não vaza |
+| 2A — Currículo ✓ | admin publica A1 Foundations e aluno matriculado vê trilha | seed idempotente, gabarito não vaza |
 | 2B — Missão | aluno responde, recarrega, conclui e recebe XP uma vez | concorrência e revisão testadas |
 | 3 — Ciclo humano | professor vê evidências, atribui tarefa e agenda aula externa | aluno alheio invisível; conflito de agenda |
 | 4 — Operação do piloto | caderno, entregas, presença e painel mínimo | piloto de seis semanas operável |
@@ -41,12 +41,18 @@ inativo, enumeração na recuperação e acesso de aluno a rota administrativa.
 O fluxo também inclui recuperação de senha genérica, perfis mínimos de aluno/professor e layouts
 protegidos em `/app`, `/teacher` e `/school`. A demonstração sem conta foi isolada em `/demo`.
 
-## Próxima entrega: Fase 2A
+## Entrega concluída: Fase 2A
 
-Vincular o currículo já publicado a matrículas reais. O administrador matricula o aluno; a API
-autenticada lista somente cursos publicados aos quais ele tem acesso; a interface deixa de tratar o
-progresso local do preview como dados da conta. Em seguida, a Fase 2B persiste tentativas, progresso
-e XP com idempotência e concorrência testadas.
+O currículo publicado agora está vinculado a matrículas reais. O administrador cria e altera
+matrículas em `/school/enrollments`; a API autenticada restringe cursos, lições e correção ao aluno
+com matrícula ativa ou concluída. Matrícula pausada ou cancelada bloqueia o currículo com 404. A
+interface da conta não lê o progresso local do preview nem simula XP.
+
+## Próxima entrega: Fase 2B
+
+Persistir tentativas, respostas confirmadas, progresso e ledger de XP. A finalização deve ser
+idempotente, emitir XP uma única vez na primeira aprovação e conservar o melhor resultado em
+revisões. Recarregar ou trocar de dispositivo deve recuperar a tentativa em andamento.
 
 ## Disciplina de entrega
 

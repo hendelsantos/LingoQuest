@@ -64,6 +64,29 @@ export async function apiPost<T>(path: string, body: object = {}): Promise<T> {
   return parseResponse<T>(response);
 }
 
+export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    cache: "no-store",
+    signal,
+  });
+  return parseResponse<T>(response);
+}
+
+export async function apiPatch<T>(path: string, body: object): Promise<T> {
+  const csrfToken = await getCsrfToken();
+  const response = await fetch(path, {
+    method: "PATCH",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
+    },
+    body: JSON.stringify(body),
+  });
+  return parseResponse<T>(response);
+}
+
 export async function getCurrentUser(): Promise<AuthUser> {
   const response = await fetch("/api/v1/auth/me/", {
     credentials: "same-origin",

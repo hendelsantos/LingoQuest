@@ -13,6 +13,7 @@ export default function SchoolLayout({ children }: { children: ReactNode }) {
           links={[
             { href: "/school", label: "Visão geral" },
             { href: "/school/invitations", label: "Convites" },
+            { href: "/school/enrollments", label: "Matrículas" },
           ]}
         >
           {children}

@@ -147,6 +147,32 @@ def test_only_admin_role_can_create_invitation():
 
 
 @pytest.mark.django_db
+def test_admin_lists_users_by_server_side_role_filter():
+    admin = User.objects.create_user(
+        email="admin@example.com", name="Admin", role=User.Role.ADMIN, password=PASSWORD
+    )
+    student = User.objects.create_user(
+        email="student@example.com",
+        name="Student",
+        role=User.Role.STUDENT,
+        password=PASSWORD,
+    )
+    User.objects.create_user(
+        email="teacher@example.com",
+        name="Teacher",
+        role=User.Role.TEACHER,
+        password=PASSWORD,
+    )
+    client = APIClient()
+    client.force_login(admin)
+
+    response = client.get(reverse("admin-users"), {"role": User.Role.STUDENT})
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(student.id)]
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     ("role", "profile_model"),
     [

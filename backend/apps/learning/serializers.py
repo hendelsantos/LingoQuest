@@ -1,5 +1,9 @@
 from rest_framework import serializers
 
+from apps.accounts.models import User
+
+from .models import Course, Enrollment
+
 
 class LessonSummarySerializer(serializers.Serializer):
     slug = serializers.SlugField()
@@ -98,3 +102,99 @@ class AnswerFeedbackSerializer(serializers.Serializer):
     selectedChoiceId = serializers.IntegerField(required=False)
     correctChoiceId = serializers.IntegerField(required=False)
     correctAnswer = serializers.CharField(required=False)
+    errorCategory = serializers.ChoiceField(
+        choices=(
+            "GRAMMAR",
+            "VOCABULARY",
+            "WORD_ORDER",
+            "LISTENING",
+            "SPELLING",
+            "COMPREHENSION",
+        ),
+        required=False,
+    )
+
+
+class AssessmentQuestionSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    type = serializers.CharField()
+    prompt = serializers.CharField()
+    choices = serializers.ListField(child=serializers.CharField(), required=False)
+    tokens = serializers.ListField(child=serializers.CharField(), required=False)
+    audioText = serializers.CharField(required=False)
+
+
+class AssessmentDetailSerializer(serializers.Serializer):
+    moment = serializers.ChoiceField(choices=("initial", "final"))
+    title = serializers.CharField()
+    description = serializers.CharField()
+    questions = AssessmentQuestionSerializer(many=True)
+    speakingTask = serializers.CharField()
+    writingTask = serializers.CharField()
+
+
+class AssessmentAnswerSerializer(serializers.Serializer):
+    questionId = serializers.CharField()
+    choiceIndex = serializers.IntegerField(required=False)
+    answer = serializers.CharField(required=False, allow_blank=True)
+    order = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class AssessmentFeedbackSerializer(serializers.Serializer):
+    isCorrect = serializers.BooleanField()
+    explanation = serializers.CharField()
+    correctChoiceIndex = serializers.IntegerField(required=False)
+    correctAnswer = serializers.CharField(required=False)
+    errorCategory = serializers.CharField(required=False)
+
+
+class EnrollmentStudentSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    email = serializers.EmailField()
+
+
+class EnrollmentCourseSerializer(serializers.Serializer):
+    slug = serializers.SlugField()
+    title = serializers.CharField()
+    level = serializers.CharField()
+
+
+class EnrollmentSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    student = EnrollmentStudentSerializer()
+    course = EnrollmentCourseSerializer()
+    status = serializers.ChoiceField(choices=Enrollment.Status.choices)
+    enrolledAt = serializers.DateTimeField()
+    endedAt = serializers.DateTimeField(allow_null=True)
+
+
+class EnrollmentCreateSerializer(serializers.Serializer):
+    studentId = serializers.UUIDField()
+    courseSlug = serializers.SlugField()
+
+    def validate_studentId(self, value):
+        student = User.objects.filter(id=value, role=User.Role.STUDENT).first()
+        if student is None:
+            raise serializers.ValidationError("Aluno inválido.")
+        if not student.is_active:
+            raise serializers.ValidationError("O aluno está desativado.")
+        return value
+
+    def validate_courseSlug(self, value):
+        if not Course.objects.filter(slug=value, status=Course.Status.PUBLISHED).exists():
+            raise serializers.ValidationError("Curso publicado não encontrado.")
+        return value
+
+    def validate(self, attrs):
+        if Enrollment.objects.filter(
+            student_id=attrs["studentId"], course__slug=attrs["courseSlug"]
+        ).exists():
+            raise serializers.ValidationError(
+                {"courseSlug": "Este aluno já possui matrícula neste curso."}
+            )
+        return attrs
+
+
+class EnrollmentStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=Enrollment.Status.choices)

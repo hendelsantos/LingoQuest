@@ -1267,3 +1267,17 @@ UNITS = [
         ],
     },
 ]
+
+
+from .advanced_extension import reclassify_skills  # noqa: E402
+
+reclassify_skills(
+    UNITS,
+    {
+        "b1-first-conditional": "Speaking",
+        "b1-possibility-modals": "Speaking",
+        "b1-linking-words": "Writing",
+        "b1-passive-voice": "Writing",
+        "b1-second-conditional": "Speaking",
+    },
+)

@@ -123,6 +123,7 @@ def test_fill_in_answer_accepts_equivalent_forms(seeded_course):
     )
     assert response.json()["isCorrect"] is False
     assert response.json()["correctAnswer"] == "don't"
+    assert response.json()["errorCategory"] == "VOCABULARY"
 
 
 @pytest.mark.django_db
@@ -174,7 +175,7 @@ def test_courses_list_endpoint(seeded_course):
     assert len(courses) == catalog_totals()["courses"]
     a1 = next(course for course in courses if course["slug"] == "a1-foundations")
     assert a1["level"] == "A1"
-    assert a1["lessonCount"] == 20
+    assert a1["lessonCount"] == 23
     assert a1["unitCount"] == 5
 
 
@@ -208,7 +209,45 @@ def test_enriched_lesson_exposes_pedagogical_cycle(seeded_course):
 
 @pytest.mark.django_db
 def test_non_enriched_lesson_keeps_backward_compatible_payload(seeded_course):
-    response = APIClient().get(reverse("demo-lesson-detail", kwargs={"slug": "routine"}))
+    response = APIClient().get(
+        reverse("demo-lesson-detail", kwargs={"slug": "a2-past-regular"})
+    )
 
     assert response.status_code == 200
     assert "pedagogy" not in response.json()
+
+
+@pytest.mark.django_db
+def test_all_a1_lessons_use_enriched_pedagogical_cycle(seeded_course):
+    lessons = Lesson.objects.filter(unit__course=seeded_course)
+
+    assert lessons.count() == 23
+    assert lessons.exclude(pedagogy={}).count() == 23
+
+
+@pytest.mark.django_db
+def test_assessment_payload_hides_answers_and_parallel_forms_are_distinct():
+    client = APIClient()
+    initial = client.get(
+        reverse("demo-assessment-detail", kwargs={"moment": "initial"})
+    )
+    final = client.get(reverse("demo-assessment-detail", kwargs={"moment": "final"}))
+
+    assert initial.status_code == final.status_code == 200
+    assert len(initial.json()["questions"]) == len(final.json()["questions"]) == 6
+    assert initial.json()["questions"][0]["prompt"] != final.json()["questions"][0]["prompt"]
+    assert "correct" not in str(initial.json()["questions"]).lower()
+
+
+@pytest.mark.django_db
+def test_assessment_answer_is_graded_on_server_with_error_category():
+    response = APIClient().post(
+        reverse("demo-assessment-answer", kwargs={"moment": "initial"}),
+        {"questionId": "i1", "choiceIndex": 0},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.json()["isCorrect"] is False
+    assert response.json()["correctChoiceIndex"] == 1
+    assert response.json()["errorCategory"] == "GRAMMAR"

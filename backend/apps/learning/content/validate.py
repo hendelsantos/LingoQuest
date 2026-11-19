@@ -213,7 +213,10 @@ def check_lesson(
     elif any(not isinstance(point, str) or not point.strip() for point in key_points):
         report.error(f"{path}.key_points deve conter apenas textos não vazios.")
 
-    check_pedagogy(report, path, lesson.get("pedagogy"))
+    pedagogy = lesson.get("pedagogy")
+    if level == "a1" and pedagogy is None:
+        report.error(f"{path}.pedagogy é obrigatória no currículo A1 enriquecido.")
+    check_pedagogy(report, path, pedagogy)
 
     dialogue = lesson.get("dialogue")
     if dialogue is not None:

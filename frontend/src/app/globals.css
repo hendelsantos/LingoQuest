@@ -758,6 +758,32 @@ footer {
   margin-top: 28px;
 }
 
+.management-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(380px, 1.15fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.enrollment-panel {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px;
+  background: white;
+  box-shadow: 0 22px 60px rgb(18 54 56 / 8%);
+}
+
+.enrollment-panel .auth-eyebrow { margin-top: 0; }
+.enrollment-panel h2 { margin: 8px 0 22px; font-size: 28px; }
+.enrollment-list { display: grid; gap: 10px; }
+.enrollment-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.enrollment-row > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.enrollment-row strong, .enrollment-row span, .enrollment-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enrollment-row span, .enrollment-row small { color: var(--muted); font-size: 11px; }
+.enrollment-row label { display: grid; flex: 0 0 125px; gap: 5px; }
+.enrollment-row label span { font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.enrollment-row select { min-height: 38px; border: 1px solid #cedace; border-radius: 9px; padding: 0 9px; background: white; color: var(--ink); }
+
 @media (max-width: 680px) {
   .auth-links,
   .role-header {
@@ -771,6 +797,10 @@ footer {
     gap: 12px;
     font-size: 12px;
   }
+
+  .management-grid { grid-template-columns: 1fr; }
+  .enrollment-row { align-items: stretch; flex-direction: column; }
+  .enrollment-row label { width: 100%; }
 }
 
 /* Student demo */
@@ -1062,7 +1092,7 @@ footer {
 
 .student-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-top: 16px;
 }
@@ -1274,7 +1304,8 @@ footer {
 
 .live-card button,
 .live-card a,
-.mini-card button {
+.mini-card button,
+.mini-card a {
   display: inline-flex;
   margin-top: 14px;
   border: 1px solid var(--border);
@@ -1310,6 +1341,7 @@ footer {
 
 .mini-card h3 { margin: 0 0 3px; font-size: 14px; }
 .mini-card p { color: var(--muted); font-size: 11px; }
+.mini-card a { color: #4f7120; font-size: 10px; font-weight: 800; }
 
 .loading-copy,
 .lesson-skeleton {
@@ -1437,6 +1469,66 @@ footer {
 .planned-levels div { display: flex; align-items: center; justify-content: space-between; border: 1px dashed #cfd9ca; border-radius: 14px; padding: 18px; color: #879289; }
 .planned-levels strong { font-size: 18px; }
 .planned-levels span { font-size: 10px; text-transform: uppercase; }
+
+/* Review queue and assessments */
+.review-header,
+.assessment-intro,
+.assessment-production {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: clamp(28px, 5vw, 52px);
+  background: white;
+}
+
+.review-header h1,
+.assessment-intro h1,
+.assessment-production h1 {
+  margin: 10px 0 14px;
+  font-size: clamp(34px, 5vw, 54px);
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+.review-header > p,
+.assessment-intro > p,
+.assessment-production > p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.review-section { margin-top: 30px; }
+.review-list { display: grid; gap: 12px; }
+.review-list article { display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; background: white; }
+.review-list article span { color: #69893b; font-size: 9px; font-weight: 850; text-transform: uppercase; }
+.review-list article h3 { margin: 5px 0; font-size: 18px; }
+.review-list article p { margin: 0; color: var(--muted); font-size: 11px; }
+.review-empty { border: 1px dashed #c8d5c2; border-radius: 15px; padding: 28px; color: var(--muted); text-align: center; }
+.review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.upcoming-list, .error-pattern-list { display: grid; gap: 9px; }
+.upcoming-list > div, .error-pattern-list > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: white; }
+.upcoming-list > div { flex-direction: column; align-items: flex-start; }
+.upcoming-list strong, .error-pattern-list strong { font-size: 12px; }
+.upcoming-list span, .error-pattern-list small { color: var(--muted); font-size: 9px; }
+.error-pattern-list > div > span { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; background: #fff0d5; color: #895d1f; font-weight: 850; }
+.error-pattern-list > div > div { display: flex; flex: 1; flex-direction: column; }
+
+.assessment-page { max-width: 900px; margin: 0 auto; }
+.assessment-intro, .assessment-production { max-width: 820px; margin: 0 auto; }
+.assessment-intro > .student-primary-button { margin-top: 28px; }
+.assessment-notice { margin-top: 24px; border-radius: 13px; padding: 18px; background: #fff7e8; }
+.assessment-notice strong { font-size: 12px; }
+.assessment-notice p { margin: 5px 0 0; color: #6e6048; font-size: 11px; line-height: 1.6; }
+.assessment-production > section { margin-top: 24px; border-radius: 14px; padding: 20px; background: #eef5e2; }
+.assessment-production h2 { margin: 0 0 8px; font-size: 18px; }
+.assessment-production section p { margin: 0 0 8px; line-height: 1.6; }
+.assessment-production section small { color: var(--muted); line-height: 1.5; }
+.assessment-production > label { display: grid; gap: 8px; margin-top: 24px; }
+.assessment-production > label > span { font-size: 12px; font-weight: 850; }
+.assessment-production > label p { margin: 0; color: var(--muted); font-size: 12px; }
+.assessment-production textarea { width: 100%; resize: vertical; border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--ink); font: inherit; line-height: 1.6; }
+.assessment-production > .student-primary-button { margin-top: 24px; }
 
 /* Lesson player */
 .lesson-page-top { min-height: 44px; display: grid; grid-template-columns: 1fr 180px 1fr; align-items: center; margin-bottom: 18px; }
@@ -1824,4 +1916,8 @@ footer {
   .result-actions { align-items: stretch; flex-direction: column; }
   .student-topbar .demo-pill { font-size: 8px; }
   .course-switcher { grid-template-columns: repeat(2, 1fr); }
+  .review-grid { grid-template-columns: 1fr; }
+  .review-list article { align-items: stretch; flex-direction: column; }
+  .review-list article .student-primary-button { width: 100%; }
+  .review-header, .assessment-intro, .assessment-production { border-radius: 17px; padding: 24px 18px; }
 }

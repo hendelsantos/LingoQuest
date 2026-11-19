@@ -10,5 +10,5 @@ export default async function DemoLessonPage({ params, searchParams }: {
 }) {
   const { lessonId } = await params;
   const { course } = await searchParams;
-  return <LessonPlayer slug={lessonId} courseSlug={course} basePath="/demo" />;
+  return <LessonPlayer access="demo" slug={lessonId} courseSlug={course} basePath="/demo" />;
 }

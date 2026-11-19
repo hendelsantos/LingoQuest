@@ -16,9 +16,9 @@ diagnóstico → missão curta → erro registrado → atividade personalizada �
 ## O que já existe
 
 - landing page e ambiente do aluno responsivos;
-- currículo demonstrativo A1–C2 com 105 missões e 538 questões;
+- currículo demonstrativo A1–C2 com 112 missões e 570 questões;
 - teoria, exemplos, áudio do navegador, quiz e feedback pedagógico;
-- piloto de missão enriquecida com ativação, produção e recuperação nas quatro primeiras aulas A1;
+- missão enriquecida em todo o A1, revisões cumulativas e recuperação em 1, 3, 7 e 21 dias;
 - progresso demonstrativo salvo no navegador;
 - frontend Next.js, API Django e PostgreSQL publicados no Railway;
 - deploy automático da branch `main` do GitHub.

@@ -1264,3 +1264,8 @@ UNITS = [
         ],
     },
 ]
+
+
+from .advanced_extension import add_b2_review  # noqa: E402
+
+add_b2_review(UNITS)

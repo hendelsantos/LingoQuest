@@ -30,7 +30,7 @@ real, antes de ampliar dashboards administrativos.
 
 ## Pedagogia: gamificar sem esvaziar o aprendizado
 
-As 105 missões e 538 questões demonstram amplitude e validam o motor, mas não comprovam sozinhas
+As 112 missões e 570 questões demonstram amplitude e validam o motor, mas não comprovam sozinhas
 que a plataforma “ensina inglês”. Um piloto pedagógico minimamente confiável deve ter:
 
 - diagnóstico inicial curto e avaliação final equivalente, sem chamar o resultado de certificação;

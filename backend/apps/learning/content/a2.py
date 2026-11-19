@@ -1887,3 +1887,16 @@ UNITS = [
         ],
     },
 ]
+
+
+from .advanced_extension import reclassify_skills  # noqa: E402
+
+reclassify_skills(
+    UNITS,
+    {
+        "a2-past-questions": "Speaking",
+        "a2-going-to": "Speaking",
+        "a2-will-decisions": "Speaking",
+        "a2-should-advice": "Speaking",
+    },
+)

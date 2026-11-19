@@ -10,6 +10,7 @@ import {
   progressForSlugs,
   progressStats,
   readProgress,
+  reviewSchedule,
   type DemoProgress,
 } from "@/lib/demo-progress";
 import { flattenLessons, getCourseOutline, type CourseOutline } from "@/lib/learning";
@@ -17,6 +18,7 @@ import { flattenLessons, getCourseOutline, type CourseOutline } from "@/lib/lear
 export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
   const [outline, setOutline] = useState<CourseOutline | null>(null);
   const [progress, setProgress] = useState<DemoProgress>(emptyProgress);
+  const [reviewNow, setReviewNow] = useState<Date | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -24,7 +26,10 @@ export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
     getCourseOutline("a1-foundations", controller.signal).then(setOutline).catch((reason: unknown) => {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Erro inesperado.");
     });
-    const refreshProgress = () => setProgress(readProgress());
+    const refreshProgress = () => {
+      setProgress(readProgress());
+      setReviewNow(new Date());
+    };
     refreshProgress();
     window.addEventListener(PROGRESS_EVENT, refreshProgress);
     window.addEventListener("storage", refreshProgress);
@@ -40,8 +45,12 @@ export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
     () => progressForSlugs(progress, lessons.map((lesson) => lesson.slug)),
     [lessons, progress],
   );
-  const stats = progressStats(courseProgress, outline?.lessonCount ?? 20);
+  const stats = progressStats(courseProgress, outline?.lessonCount ?? 23);
+  const courseComplete = Boolean(outline && stats.completedCount >= outline.lessonCount);
   const nextLesson = lessons.find((lesson) => !courseProgress.completed[lesson.slug]) ?? lessons[0];
+  const dueReviews = reviewNow
+    ? reviewSchedule(courseProgress, reviewNow).filter((item) => item.due).length
+    : 0;
 
   return (
     <>
@@ -59,8 +68,9 @@ export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
 
       <section className="student-stat-grid" aria-label="Seu progresso">
         <article><span className="stat-icon is-warm">⚡</span><div><strong>{stats.xp}</strong><small>Pontos de experiência</small></div></article>
-        <article><span className="stat-icon is-green">◇</span><div><strong>{stats.completedCount}/{outline?.lessonCount ?? 20}</strong><small>Missões concluídas</small></div></article>
+        <article><span className="stat-icon is-green">◇</span><div><strong>{stats.completedCount}/{outline?.lessonCount ?? 23}</strong><small>Missões concluídas</small></div></article>
         <article><span className="stat-icon is-lavender">◎</span><div><strong>{stats.percent}%</strong><small>Progresso A1</small></div></article>
+        <article><span className="stat-icon is-green">↻</span><div><strong>{dueReviews}</strong><small>Revisões para hoje</small></div></article>
       </section>
 
       <div className="student-section-heading">
@@ -74,7 +84,7 @@ export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
         <article className="learning-path-card">
           <div className="course-card-topline"><span>A1 · Foundations</span><strong>{stats.percent}%</strong></div>
           <div className="course-progress"><i style={{ width: `${stats.percent}%` }} /></div>
-          <small>{stats.percent}% concluído · {outline?.lessonCount ?? 20} missões</small>
+          <small>{stats.percent}% concluído · {outline?.lessonCount ?? 23} missões</small>
           <div className="compact-lesson-list">
             {lessons.slice(0, 4).map((lesson, index) => {
               const done = Boolean(courseProgress.completed[lesson.slug]);
@@ -92,6 +102,8 @@ export function DashboardDemo({ basePath = "/app" }: { basePath?: string }) {
 
         <aside className="dashboard-aside">
           <article className="live-card"><span>• Aulas ao vivo</span><h3>Live classroom</h3><p>Teste câmera, microfone e uma atividade dentro da sala demonstrativa.</p><Link href={`${basePath}/live`}>Ver sala de aula →</Link></article>
+          <article className="mini-card"><span>↻</span><div><h3>Revisão espaçada</h3><p>Retome em 1, 3, 7 e 21 dias.</p><Link href={`${basePath}/review`}>{dueReviews ? `${dueReviews} para revisar` : "Ver agenda"} →</Link></div></article>
+          <article className="mini-card"><span>◫</span><div><h3>Avaliação A1</h3>{!progress.assessments.initial ? <><p>Registre seu ponto de partida.</p><Link href={`${basePath}/assessment/initial`}>Começar avaliação →</Link></> : progress.assessments.final ? <><p>Inicial: {progress.assessments.initial.score}% · final: {progress.assessments.final.score}%</p><Link href={`${basePath}/assessment/final`}>Refazer avaliação final →</Link></> : courseComplete ? <><p>Ponto inicial: {progress.assessments.initial.score}%</p><Link href={`${basePath}/assessment/final`}>Fazer avaliação final →</Link></> : <p>A avaliação final será liberada após concluir as {outline?.lessonCount ?? 23} missões A1.</p>}</div></article>
           <article className="mini-card"><span>✳</span><div><h3>Mini challenge</h3><p>Conclua uma missão e desbloqueie 60 XP.</p></div></article>
           <article className="mini-card"><span>✎</span><div><h3>Seu caderno digital</h3><p>Guarde expressões e revise vocabulário.</p><button disabled>Abrir em breve</button></div></article>
         </aside>

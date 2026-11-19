@@ -11,19 +11,21 @@ Fundação publicada e primeiro fluxo educacional demonstrável:
 - PostgreSQL como único banco suportado;
 - usuário customizado criado antes da primeira migration;
 - health check, OpenAPI em desenvolvimento, landing e ambiente do aluno responsivos;
-- currículo demonstrativo completo de A1 a C2, com 105 missões e 538 questões;
-- piloto da Missão 2.0 nas quatro primeiras aulas A1, com ativação, produção e revisão;
+- currículo demonstrativo A1–C2 com 112 missões e 570 questões;
+- Missão 2.0 em todo o A1, com ativação, produção, revisão cumulativa e retomada espaçada;
+- avaliações A1 inicial/final paralelas e categorias de erro para orientar o estudo;
 - teoria, diálogos, áudio de referência, quatro tipos de exercício e correção no servidor;
 - painel e trilha demonstrativos com progresso salvo no navegador;
 - laboratório de aula ao vivo com câmera local real, controles de mídia e exercício interativo;
 - identidade por convite para alunos e professores, login por sessão, logout e recuperação de senha;
 - áreas protegidas por papel para aluno, professor e administração;
+- matrícula persistida com gestão administrativa e currículo autenticado isolado por aluno;
 - configurações separadas para desenvolvimento, testes e produção;
 - testes, lint, typecheck, build e CI;
 - frontend, backend e PostgreSQL publicados no Railway com deploy automático pela `main`.
 
-Matrícula persistida por aluno, progresso associado à conta, pagamentos e videoconferência entre
-duas contas **ainda não estão implementados**. O laboratório usa somente os dispositivos locais e
+Tentativas, progresso e XP associados à conta, pagamentos e videoconferência entre duas contas
+**ainda não estão implementados**. O laboratório usa somente os dispositivos locais e
 informa quando não existe um professor conectado; o modo público não simula esses recursos.
 
 Produção: <https://frontend-production-a0b865d3.up.railway.app/><br>

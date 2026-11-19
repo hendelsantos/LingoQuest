@@ -1214,3 +1214,8 @@ UNITS = [
         ],
     },
 ]
+
+
+from .a1_extension import apply_a1_extension  # noqa: E402
+
+apply_a1_extension(UNITS)
